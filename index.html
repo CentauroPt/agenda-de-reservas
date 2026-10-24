@@ -15,6 +15,18 @@
       display: grid;
       grid-template-columns: 60px repeat(7, minmax(130px, 1fr));
     }
+    html.global-title-font h1,
+    html.global-title-font h2,
+    html.global-title-font h3,
+    html.global-title-font .campaign-banner {
+      font-family: var(--global-title-font) !important;
+    }
+    html.global-title-size h1,
+    html.global-title-size h2,
+    html.global-title-size h3,
+    html.global-title-size .campaign-banner {
+      font-size: var(--global-title-size) !important;
+    }
     .campaign-banner {
       background-color: var(--banner-bg, #6d28d9);
     }
@@ -603,6 +615,28 @@
 
           <div class="pt-4 border-t space-y-3">
             <div>
+              <h3 class="text-sm font-bold text-slate-800">Nome da campanha e títulos</h3>
+              <p class="text-[11px] text-slate-500">O nome aplica-se aos banners e ao calendário. A tipografia abaixo aplica-se a <b>todos os títulos e banners</b> do programa.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="appearance-campaign-name" class="block text-[11px] font-bold text-slate-700">Nome da campanha</label>
+                <input id="appearance-campaign-name" type="text" class="w-full p-2 border rounded-lg text-xs font-bold">
+              </div>
+              <div></div>
+              <div class="space-y-2">
+                <label for="appearance-title-font" class="block text-[11px] font-bold text-slate-700">Fonte dos títulos e banners</label>
+                <select id="appearance-title-font" class="w-full p-2 border rounded-lg text-xs font-bold bg-white"></select>
+              </div>
+              <div class="space-y-2">
+                <label for="appearance-title-size" class="block text-[11px] font-bold text-slate-700">Tamanho dos títulos e banners</label>
+                <select id="appearance-title-size" class="w-full p-2 border rounded-lg text-xs font-bold bg-white"></select>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t space-y-3">
+            <div>
               <h3 class="text-sm font-bold text-slate-800">Tipografia da aplicação</h3>
               <p class="text-[11px] text-slate-500">Aplica-se aos restantes textos (calendário, tabelas, formulários).</p>
             </div>
@@ -779,6 +813,8 @@
         appearance: {
           fontFamily: '__system',
           fontSize: 16,
+          globalTitleFont: '',
+          globalTitleSize: 0,
           banners: {
             campaign: { color: '#6d28d9', text: '{localidade} · {dias}', fontFamily: '__system', fontSize: 10 },
             outside: { color: '#cbd5e1', text: 'Fora da campanha', fontFamily: '__system', fontSize: 10 }
@@ -943,6 +979,8 @@
           };
 
           appData.appearance = {
+            globalTitleFont: typeof appearance.globalTitleFont === 'string' ? appearance.globalTitleFont : '',
+            globalTitleSize: Number.isFinite(Number(appearance.globalTitleSize)) ? Math.min(48, Math.max(0, Number(appearance.globalTitleSize))) : 0,
             fontFamily: typeof appearance.fontFamily === 'string' && appearance.fontFamily ? appearance.fontFamily : '__system',
             fontSize: Number.isFinite(Number(appearance.fontSize)) ? Math.min(26, Math.max(10, Number(appearance.fontSize))) : 16,
             banners: {
@@ -1649,7 +1687,7 @@
           const background = settings.color || '#6d28d9';
 
           const bar = document.createElement('div');
-          bar.className = 'rounded-lg px-2 py-0.5 flex items-center justify-center overflow-hidden shadow-sm';
+          bar.className = 'campaign-banner rounded-lg px-2 py-0.5 flex items-center justify-center overflow-hidden shadow-sm';
           bar.style.backgroundColor = background;
           bar.style.color = bannerContrastColor(background);
           if (settings.fontFamily && settings.fontFamily !== '__system') bar.style.fontFamily = settings.fontFamily;
@@ -3686,6 +3724,20 @@
         return appData.appearance.banners[type];
       }
 
+      function applyGlobalTitles() {
+        const appearance = appData.appearance || {};
+        const font = appearance.globalTitleFont || '';
+        const size = Number(appearance.globalTitleSize) || 0;
+        const root = document.documentElement;
+
+        root.style.setProperty('--global-title-font', font || 'inherit');
+        root.style.setProperty('--global-title-size', size > 0 ? `${size}px` : 'inherit');
+        root.classList.toggle('global-title-font', !!font);
+        root.classList.toggle('global-title-size', size > 0);
+
+        if (font) ensureFontLoaded(fontOption(font));
+      }
+
       function applyAppearance() {
         const appearance = appData.appearance || {};
         const option = fontOption(appearance.fontFamily || '__system');
@@ -3699,6 +3751,8 @@
           ensureFontLoaded(option);
           document.body.style.fontFamily = option.value;
         }
+
+        applyGlobalTitles();
 
         ['campaign', 'outside'].forEach((type) => {
           const settings = bannerSettings(type);
@@ -3773,6 +3827,44 @@
           });
         }
 
+        const nameInput = document.getElementById('appearance-campaign-name');
+        const titleFontSelect = document.getElementById('appearance-title-font');
+        const titleSizeSelect = document.getElementById('appearance-title-size');
+        const location = currentLocation();
+
+        if (nameInput) nameInput.value = location ? location.name : '';
+
+        if (titleFontSelect && !titleFontSelect.options.length) {
+          const keep = document.createElement('option');
+          keep.value = '';
+          keep.textContent = '— Manter atual —';
+          titleFontSelect.appendChild(keep);
+
+          FONT_OPTIONS.forEach((option) => {
+            const item = document.createElement('option');
+            item.value = option.value;
+            item.textContent = option.label;
+            item.style.fontFamily = option.value === '__system' ? '' : option.value;
+            titleFontSelect.appendChild(item);
+          });
+        }
+        if (titleFontSelect) titleFontSelect.value = appData.appearance.globalTitleFont || '';
+
+        if (titleSizeSelect && !titleSizeSelect.options.length) {
+          const keep = document.createElement('option');
+          keep.value = '0';
+          keep.textContent = '— Manter atual —';
+          titleSizeSelect.appendChild(keep);
+
+          for (let px = 10; px <= 48; px++) {
+            const item = document.createElement('option');
+            item.value = String(px);
+            item.textContent = `${px} px`;
+            titleSizeSelect.appendChild(item);
+          }
+        }
+        if (titleSizeSelect) titleSizeSelect.value = String(appData.appearance.globalTitleSize || 0);
+
         renderBannerPreview();
       }
 
@@ -3820,6 +3912,22 @@
         appData.appearance.bannerColor = bannerSettings('campaign').color;
         appData.appearance.fontFamily = document.getElementById('appearance-font').value || '__system';
         appData.appearance.fontSize = Math.min(26, Math.max(10, parseInt(document.getElementById('appearance-size').value, 10) || 16));
+
+        const titleFontSelect = document.getElementById('appearance-title-font');
+        const titleSizeSelect = document.getElementById('appearance-title-size');
+        appData.appearance.globalTitleFont = titleFontSelect ? titleFontSelect.value : '';
+        appData.appearance.globalTitleSize = titleSizeSelect ? Math.min(48, Math.max(0, parseInt(titleSizeSelect.value, 10) || 0)) : 0;
+
+        const nameInput = document.getElementById('appearance-campaign-name');
+        const location = currentLocation();
+        if (nameInput && location) {
+          const newName = nameInput.value.trim();
+          if (newName && newName !== location.name) {
+            location.name = newName;
+            renderLocationSelect();
+            renderAdminLocations();
+          }
+        }
       }
 
       function applyAppearanceFromControls() {
@@ -3864,6 +3972,8 @@
         appData.appearance = {
           fontFamily: '__system',
           fontSize: 16,
+          globalTitleFont: '',
+          globalTitleSize: 0,
           banners: {
             campaign: Object.assign({}, BANNER_DEFAULTS.campaign),
             outside: Object.assign({}, BANNER_DEFAULTS.outside)

@@ -230,7 +230,12 @@ Na sub-página **Google Calendar** existe o bloco **🎨 Aparência**, que permi
 - **fonte** (33 opções, incluindo 12 Google Fonts carregadas só quando escolhidas);
 - **tamanho** de 8 a 24 px no banner.
 
-Há ainda a **tipografia da aplicação** (fonte e tamanho de 10 a 26 px) para os restantes textos.
+Há ainda:
+
+- **Nome da campanha** editável no próprio bloco (atualiza banners e calendário);
+- **Fonte e tamanho para todos os títulos e banners** do programa (71 fontes, tamanhos de 10 a 48 px),
+  aplicados a `h1`, `h2`, `h3` e à barra da campanha;
+- **tipografia da aplicação** (fonte e tamanho de 10 a 26 px) para os restantes textos.
 Tudo fica guardado no `localStorage`, com pré-visualização ao vivo e **Repor aparência**.
 
 ## Ligação ao Google Calendar (opcional)
