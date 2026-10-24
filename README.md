@@ -185,15 +185,18 @@ automaticamente na primeira abertura.
 
 ## Aparência
 
-Na sub-página **Google Calendar** existe o bloco **🎨 Aparência**, que permite:
+Na sub-página **Google Calendar** existe o bloco **🎨 Aparência**, que permite personalizar
+**cada banner** separadamente:
 
-- **cor dos banners de campanha** (10 tons predefinidos ou seletor livre);
-- **fonte** entre 33 opções (sistema, Arial, Verdana, Georgia, Cambria, Courier, Comic Sans, Impact…
-  e 12 Google Fonts descarregadas só quando escolhidas);
-- **tamanho da letra** de 10 a 26 px (lista + slider), aplicado à raiz da página para escalar toda a
-  tipografia.
+- **escolher o banner**: “Banner da campanha” ou “Banner ‘Fora da campanha’”;
+- **texto do banner**, com etiquetas dinâmicas: `{localidade}`, `{dias}`, `{inicio}`, `{fim}`
+  (ex.: `Reservas Creactivity — {localidade} ({dias})`);
+- **cor** (10 tons predefinidos ou seletor livre; o texto ajusta automaticamente entre claro/escuro);
+- **fonte** (33 opções, incluindo 12 Google Fonts carregadas só quando escolhidas);
+- **tamanho** de 8 a 24 px no banner.
 
-As escolhas são guardadas no `localStorage` e há **Repor aparência** para voltar ao original.
+Há ainda a **tipografia da aplicação** (fonte e tamanho de 10 a 26 px) para os restantes textos.
+Tudo fica guardado no `localStorage`, com pré-visualização ao vivo e **Repor aparência**.
 
 ## Ligação ao Google Calendar (opcional)
 

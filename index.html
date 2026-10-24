@@ -402,12 +402,26 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div>
             <h2 class="text-lg font-bold text-slate-900">🎨 Aparência</h2>
-            <p class="text-xs text-slate-500 mt-1">Cor dos banners de campanha e tipografia de toda a aplicação. As alterações aplicam-se de imediato e ficam guardadas neste navegador.</p>
+            <p class="text-xs text-slate-500 mt-1">Escolhe o banner, o texto, a cor e a tipografia. As alterações aplicam-se de imediato e ficam guardadas neste navegador.</p>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-2">
-              <label for="appearance-banner-color" class="block text-[11px] font-bold text-slate-700">Cor dos banners</label>
+              <label for="appearance-banner-target" class="block text-[11px] font-bold text-slate-700">Banner a personalizar</label>
+              <select id="appearance-banner-target" class="w-full p-2 border rounded-lg text-xs font-bold bg-white">
+                <option value="campaign">Banner da campanha</option>
+                <option value="outside">Banner “Fora da campanha”</option>
+              </select>
+              <p class="text-[10px] text-slate-400">Etiquetas disponíveis: <code>{localidade}</code>, <code>{dias}</code>, <code>{inicio}</code>, <code>{fim}</code>.</p>
+            </div>
+
+            <div class="space-y-2">
+              <label for="appearance-banner-text" class="block text-[11px] font-bold text-slate-700">Texto do banner</label>
+              <input id="appearance-banner-text" type="text" placeholder="{localidade} · {dias}" class="w-full p-2 border rounded-lg text-xs font-bold">
+            </div>
+
+            <div class="space-y-2">
+              <label for="appearance-banner-color" class="block text-[11px] font-bold text-slate-700">Cor do banner</label>
               <div class="flex items-center gap-2">
                 <input type="color" id="appearance-banner-color" class="h-10 w-14 p-1 border rounded-lg bg-white cursor-pointer">
                 <span id="appearance-banner-color-label" class="text-xs font-mono text-slate-500">#6d28d9</span>
@@ -416,27 +430,47 @@
             </div>
 
             <div class="space-y-2">
-              <label for="appearance-font" class="block text-[11px] font-bold text-slate-700">Fonte</label>
-              <select id="appearance-font" class="w-full p-2 border rounded-lg text-xs font-bold bg-white"></select>
-              <p class="text-[10px] text-slate-400">As fontes marcadas com “Google” são descarregadas quando escolhidas.</p>
+              <label for="appearance-banner-font" class="block text-[11px] font-bold text-slate-700">Fonte do banner</label>
+              <select id="appearance-banner-font" class="w-full p-2 border rounded-lg text-xs font-bold bg-white"></select>
             </div>
 
             <div class="space-y-2">
-              <label for="appearance-size" class="block text-[11px] font-bold text-slate-700">Tamanho da letra</label>
+              <label for="appearance-banner-size" class="block text-[11px] font-bold text-slate-700">Tamanho da letra no banner</label>
               <div class="flex items-center gap-2">
-                <select id="appearance-size" class="flex-1 p-2 border rounded-lg text-xs font-bold bg-white"></select>
-                <span id="appearance-size-label" class="text-xs font-mono text-slate-500">16 px</span>
+                <select id="appearance-banner-size" class="flex-1 p-2 border rounded-lg text-xs font-bold bg-white"></select>
+                <span id="appearance-banner-size-label" class="text-xs font-mono text-slate-500">10 px</span>
               </div>
-              <input type="range" id="appearance-size-range" min="10" max="26" step="1" value="16" class="w-full accent-indigo-600">
+              <input type="range" id="appearance-banner-size-range" min="8" max="24" step="1" value="10" class="w-full accent-indigo-600">
             </div>
 
             <div class="space-y-2">
               <p class="block text-[11px] font-bold text-slate-700">Pré-visualização</p>
               <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                <div class="campaign-banner h-7 rounded-lg text-white px-2 flex items-center overflow-hidden shadow-sm">
-                  <span id="appearance-preview-text" class="text-[10px] font-bold truncate">71.Torres Vedras · 5 dias</span>
+                <div id="appearance-preview-banner" class="rounded-lg px-2 py-1 flex items-center justify-center overflow-hidden shadow-sm">
+                  <span id="appearance-preview-text" class="font-bold truncate">71.Torres Vedras · 5 dias</span>
                 </div>
-                <p id="appearance-preview-body" class="text-xs text-slate-600">Texto de exemplo para veres a fonte e o tamanho.</p>
+                <p class="text-[10px] text-slate-400">Pré-visualização com 5 dias e a localidade selecionada.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t space-y-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Tipografia da aplicação</h3>
+              <p class="text-[11px] text-slate-500">Aplica-se aos restantes textos (calendário, tabelas, formulários).</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="appearance-font" class="block text-[11px] font-bold text-slate-700">Fonte</label>
+                <select id="appearance-font" class="w-full p-2 border rounded-lg text-xs font-bold bg-white"></select>
+              </div>
+              <div class="space-y-2">
+                <label for="appearance-size" class="block text-[11px] font-bold text-slate-700">Tamanho da letra</label>
+                <div class="flex items-center gap-2">
+                  <select id="appearance-size" class="flex-1 p-2 border rounded-lg text-xs font-bold bg-white"></select>
+                  <span id="appearance-size-label" class="text-xs font-mono text-slate-500">16 px</span>
+                </div>
+                <input type="range" id="appearance-size-range" min="10" max="26" step="1" value="16" class="w-full accent-indigo-600">
               </div>
             </div>
           </div>
@@ -449,9 +483,8 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900">🔗 Ligação ao Google Calendar</h2>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🔗 Ligação ao Google Calendar</h2>
               <p class="text-xs text-slate-500 mt-1">A aplicação fala diretamente com a API do Google a partir deste browser. Aqui fica apenas o Client ID, a API key e o ID do calendário — nenhum segredo é enviado para servidores nossos.</p>
             </div>
             <span id="google-connection-badge" class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">Desligado</span>
@@ -596,7 +629,14 @@
         weeklySlots: defaultWeeklySlots(),
         dateSlots: {},
         google: { clientId: '', apiKey: '', calendarId: 'primary' },
-        appearance: { bannerColor: '#6d28d9', fontFamily: '__system', fontSize: 16 },
+        appearance: {
+          fontFamily: '__system',
+          fontSize: 16,
+          banners: {
+            campaign: { color: '#6d28d9', text: '{localidade} · {dias}', fontFamily: '__system', fontSize: 10 },
+            outside: { color: '#cbd5e1', text: 'Fora da campanha', fontFamily: '__system', fontSize: 10 }
+          }
+        },
         adminPinHash: '',
         bookings: {},
         currentWeekOffset: 0,
@@ -696,10 +736,30 @@
           appData.adminPinHash = typeof parsed.adminPinHash === 'string' ? parsed.adminPinHash : '';
 
           const appearance = parsed.appearance && typeof parsed.appearance === 'object' ? parsed.appearance : {};
+          const legacyBanners = appearance.banners && typeof appearance.banners === 'object' ? appearance.banners : {};
+
+          const normalizeBanner = (type, fallback) => {
+            const source = legacyBanners[type] && typeof legacyBanners[type] === 'object' ? legacyBanners[type] : {};
+            return {
+              color: typeof source.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(source.color) ? source.color : fallback.color,
+              text: typeof source.text === 'string' ? source.text : fallback.text,
+              fontFamily: typeof source.fontFamily === 'string' && source.fontFamily ? source.fontFamily : fallback.fontFamily,
+              fontSize: Number.isFinite(Number(source.fontSize)) ? Math.min(24, Math.max(8, Number(source.fontSize))) : fallback.fontSize
+            };
+          };
+
           appData.appearance = {
-            bannerColor: typeof appearance.bannerColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(appearance.bannerColor) ? appearance.bannerColor : '#6d28d9',
             fontFamily: typeof appearance.fontFamily === 'string' && appearance.fontFamily ? appearance.fontFamily : '__system',
-            fontSize: Number.isFinite(Number(appearance.fontSize)) ? Math.min(26, Math.max(10, Number(appearance.fontSize))) : 16
+            fontSize: Number.isFinite(Number(appearance.fontSize)) ? Math.min(26, Math.max(10, Number(appearance.fontSize))) : 16,
+            banners: {
+              campaign: normalizeBanner('campaign', {
+                color: typeof appearance.bannerColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(appearance.bannerColor) ? appearance.bannerColor : '#6d28d9',
+                text: '{localidade} · {dias}',
+                fontFamily: '__system',
+                fontSize: 10
+              }),
+              outside: normalizeBanner('outside', { color: '#cbd5e1', text: 'Fora da campanha', fontFamily: '__system', fontSize: 10 })
+            }
           };
 
           const google = parsed.google && typeof parsed.google === 'object' ? parsed.google : {};
@@ -1383,21 +1443,28 @@
           wrapper.style.flex = String(span);
           wrapper.className = 'px-0.5';
 
+          const settings = (appData.appearance && appData.appearance.banners && appData.appearance.banners[inCampaign ? 'campaign' : 'outside']) || {};
+          const background = settings.color || (inCampaign ? '#6d28d9' : '#cbd5e1');
+
           const bar = document.createElement('div');
-          bar.className = inCampaign
-            ? 'campaign-banner h-7 rounded-lg text-white px-2 flex items-center overflow-hidden shadow-sm'
-            : 'h-7 rounded-lg border border-dashed border-slate-200 text-slate-400 px-2 flex items-center justify-center overflow-hidden';
+          bar.className = 'rounded-lg px-2 py-0.5 flex items-center justify-center overflow-hidden shadow-sm';
+          bar.style.backgroundColor = background;
+          bar.style.color = bannerContrastColor(background);
+          if (settings.fontFamily && settings.fontFamily !== '__system') bar.style.fontFamily = settings.fontFamily;
+          bar.style.fontSize = `${settings.fontSize || 10}px`;
+          if (!inCampaign) bar.style.border = '1px dashed rgba(15, 23, 42, 0.25)';
           bar.title = inCampaign
             ? `${location ? location.name : 'Campanha'}: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)} (${span} dia${span > 1 ? 's' : ''})`
             : `Fora da campanha: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)}`;
 
           const label = document.createElement('span');
-          label.className = 'text-[10px] font-bold truncate';
-          label.textContent = inCampaign
-            ? (span > 1
-                ? `${location ? location.name : 'Campanha'} · ${span} dias`
-                : (location ? location.name : 'Campanha'))
-            : 'Fora da campanha';
+          label.className = 'font-bold truncate';
+          label.textContent = bannerText(settings, {
+            location: location ? location.name : 'Campanha',
+            days: span,
+            start: formatHumanDate(days[index].fullDate),
+            end: formatHumanDate(days[end].fullDate)
+          });
 
           bar.appendChild(label);
           wrapper.appendChild(bar);
@@ -2829,6 +2896,11 @@
 
       const BANNER_COLORS = ['#6d28d9', '#4f46e5', '#1d4ed8', '#0891b2', '#0f766e', '#15803d', '#b45309', '#c2410c', '#be123c', '#334155'];
 
+      const BANNER_DEFAULTS = {
+        campaign: { color: '#6d28d9', text: '{localidade} · {dias}', fontFamily: '__system', fontSize: 10 },
+        outside: { color: '#cbd5e1', text: 'Fora da campanha', fontFamily: '__system', fontSize: 10 }
+      };
+
       const loadedFonts = {};
 
       function fontOption(value) {
@@ -2844,13 +2916,42 @@
         document.head.appendChild(link);
       }
 
+      function bannerContrastColor(hex) {
+        const value = String(hex || '').replace('#', '');
+        if (value.length !== 6) return '#ffffff';
+        const r = parseInt(value.slice(0, 2), 16);
+        const g = parseInt(value.slice(2, 4), 16);
+        const b = parseInt(value.slice(4, 6), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        return luminance > 0.62 ? '#1e293b' : '#ffffff';
+      }
+
+      function bannerText(settings, vars) {
+        const template = (settings && settings.text) || '';
+        if (!template.trim()) {
+          return vars.location;
+        }
+        return template
+          .replace(/\{localidade\}/gi, vars.location)
+          .replace(/\{dias\}/gi, vars.days === 1 ? '1 dia' : `${vars.days} dias`)
+          .replace(/\{inicio\}/gi, vars.start)
+          .replace(/\{fim\}/gi, vars.end)
+          .trim();
+      }
+
+      function bannerSettings(type) {
+        if (!appData.appearance.banners) appData.appearance.banners = {};
+        if (!appData.appearance.banners[type]) {
+          appData.appearance.banners[type] = Object.assign({}, BANNER_DEFAULTS[type]);
+        }
+        return appData.appearance.banners[type];
+      }
+
       function applyAppearance() {
         const appearance = appData.appearance || {};
-        const color = appearance.bannerColor || '#6d28d9';
         const option = fontOption(appearance.fontFamily || '__system');
         const size = Math.min(26, Math.max(10, Number(appearance.fontSize) || 16));
 
-        document.documentElement.style.setProperty('--banner-bg', color);
         document.documentElement.style.fontSize = size + 'px';
 
         if (option.value === '__system') {
@@ -2860,43 +2961,37 @@
           document.body.style.fontFamily = option.value;
         }
 
-        const previewText = document.getElementById('appearance-preview-text');
-        if (previewText) previewText.style.fontFamily = option.value === '__system' ? '' : option.value;
+        ['campaign', 'outside'].forEach((type) => {
+          const settings = bannerSettings(type);
+          ensureFontLoaded(fontOption(settings.fontFamily));
+        });
+
+        renderCalendar();
+      }
+
+      function currentBannerType() {
+        const select = document.getElementById('appearance-banner-target');
+        return select && select.value === 'outside' ? 'outside' : 'campaign';
       }
 
       function renderAppearanceControls() {
+        const target = document.getElementById('appearance-banner-target');
         const colorInput = document.getElementById('appearance-banner-color');
         const colorLabel = document.getElementById('appearance-banner-color-label');
-        const fontSelect = document.getElementById('appearance-font');
-        const sizeSelect = document.getElementById('appearance-size');
-        const sizeRange = document.getElementById('appearance-size-range');
-        const sizeLabel = document.getElementById('appearance-size-label');
+        const textInput = document.getElementById('appearance-banner-text');
+        const fontSelect = document.getElementById('appearance-banner-font');
+        const sizeSelect = document.getElementById('appearance-banner-size');
+        const sizeRange = document.getElementById('appearance-banner-size-range');
+        const sizeLabel = document.getElementById('appearance-banner-size-label');
         const swatches = document.getElementById('appearance-swatches');
         if (!colorInput || !fontSelect) return;
 
-        const appearance = appData.appearance;
+        const type = currentBannerType();
+        const settings = bannerSettings(type);
 
-        colorInput.value = appearance.bannerColor;
-        if (colorLabel) colorLabel.textContent = appearance.bannerColor;
-
-        if (!swatches.children.length) {
-          BANNER_COLORS.forEach((color) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'w-6 h-6 rounded-full border border-white shadow';
-            button.style.backgroundColor = color;
-            button.title = color;
-            button.setAttribute('aria-label', `Cor ${color}`);
-            button.onclick = () => {
-              appData.appearance.bannerColor = color;
-              saveState();
-              renderAppearanceControls();
-              applyAppearance();
-              setAppearanceStatus('Cor aplicada aos banners.', 'ok');
-            };
-            swatches.appendChild(button);
-          });
-        }
+        colorInput.value = settings.color;
+        if (colorLabel) colorLabel.textContent = settings.color;
+        textInput.value = settings.text;
 
         if (!fontSelect.options.length) {
           FONT_OPTIONS.forEach((option) => {
@@ -2907,19 +3002,60 @@
             fontSelect.appendChild(item);
           });
         }
-        fontSelect.value = appearance.fontFamily;
+        fontSelect.value = settings.fontFamily;
 
         if (!sizeSelect.options.length) {
-          for (let size = 10; size <= 26; size++) {
+          for (let px = 8; px <= 24; px++) {
             const item = document.createElement('option');
-            item.value = String(size);
-            item.textContent = `${size} px`;
+            item.value = String(px);
+            item.textContent = `${px} px`;
             sizeSelect.appendChild(item);
           }
         }
-        sizeSelect.value = String(appearance.fontSize);
-        if (sizeRange) sizeRange.value = String(appearance.fontSize);
-        if (sizeLabel) sizeLabel.textContent = `${appearance.fontSize} px`;
+        sizeSelect.value = String(settings.fontSize);
+        if (sizeRange) sizeRange.value = String(settings.fontSize);
+        if (sizeLabel) sizeLabel.textContent = `${settings.fontSize} px`;
+
+        if (!swatches.children.length) {
+          BANNER_COLORS.forEach((color) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'w-6 h-6 rounded-full border border-white shadow';
+            button.style.backgroundColor = color;
+            button.title = color;
+            button.setAttribute('aria-label', `Cor ${color}`);
+            button.onclick = () => {
+              const current = currentBannerType();
+              bannerSettings(current).color = color;
+              renderAppearanceControls();
+              renderBannerPreview();
+            };
+            swatches.appendChild(button);
+          });
+        }
+
+        renderBannerPreview();
+      }
+
+      function renderBannerPreview() {
+        const preview = document.getElementById('appearance-preview-banner');
+        const text = document.getElementById('appearance-preview-text');
+        if (!preview || !text) return;
+
+        const type = currentBannerType();
+        const settings = bannerSettings(type);
+        preview.style.backgroundColor = settings.color;
+        preview.style.color = bannerContrastColor(settings.color);
+        preview.style.fontFamily = settings.fontFamily === '__system' ? '' : settings.fontFamily;
+        preview.style.fontSize = `${settings.fontSize}px`;
+        ensureFontLoaded(fontOption(settings.fontFamily));
+
+        text.textContent = bannerText(settings, {
+          location: (currentLocation() || {}).name || '71.Torres Vedras',
+          days: 5,
+          start: '25/10/2026',
+          end: '29/10/2026'
+        });
       }
 
       function setAppearanceStatus(message, tone) {
@@ -2933,43 +3069,66 @@
         element.textContent = message;
       }
 
-      function readAppearanceInputs() {
-        const colorInput = document.getElementById('appearance-banner-color');
-        const fontSelect = document.getElementById('appearance-font');
-        const sizeSelect = document.getElementById('appearance-size');
-        appData.appearance = {
-          bannerColor: colorInput.value || '#6d28d9',
-          fontFamily: fontSelect.value || '__system',
-          fontSize: Math.min(26, Math.max(10, parseInt(sizeSelect.value, 10) || 16))
-        };
+      function saveAppearanceFromControls() {
+        const type = currentBannerType();
+        const settings = bannerSettings(type);
+
+        settings.color = document.getElementById('appearance-banner-color').value || BANNER_DEFAULTS[type].color;
+        settings.text = document.getElementById('appearance-banner-text').value;
+        settings.fontFamily = document.getElementById('appearance-banner-font').value || '__system';
+        settings.fontSize = Math.min(24, Math.max(8, parseInt(document.getElementById('appearance-banner-size').value, 10) || 10));
+
+        appData.appearance.bannerColor = bannerSettings('campaign').color;
+        appData.appearance.fontFamily = document.getElementById('appearance-font').value || '__system';
+        appData.appearance.fontSize = Math.min(26, Math.max(10, parseInt(document.getElementById('appearance-size').value, 10) || 16));
       }
 
-      function previewAppearance() {
-        readAppearanceInputs();
-        renderAppearanceControls();
-        applyAppearance();
-      }
-
-      document.getElementById('appearance-banner-color').oninput = previewAppearance;
-      document.getElementById('appearance-font').onchange = previewAppearance;
-      document.getElementById('appearance-size').onchange = previewAppearance;
-      document.getElementById('appearance-size-range').oninput = (event) => {
-        const sizeSelect = document.getElementById('appearance-size');
-        sizeSelect.value = String(Math.min(26, Math.max(10, Number(event.target.value))));
-        previewAppearance();
-      };
-
-      document.getElementById('btn-apply-appearance').onclick = () => {
-        readAppearanceInputs();
+      function applyAppearanceFromControls() {
+        saveAppearanceFromControls();
         saveState();
         applyAppearance();
-        renderAppearanceControls();
         setAppearanceStatus('Aparência guardada e aplicada.', 'ok');
         showToast('Aparência aplicada.', 'success');
+      }
+
+      document.getElementById('appearance-banner-target').onchange = () => renderAppearanceControls();
+      document.getElementById('appearance-banner-color').oninput = () => {
+        document.getElementById('appearance-banner-color-label').textContent = document.getElementById('appearance-banner-color').value;
+        renderBannerPreview();
+      };
+      document.getElementById('appearance-banner-text').oninput = () => renderBannerPreview();
+      document.getElementById('appearance-banner-font').onchange = () => renderBannerPreview();
+      document.getElementById('appearance-banner-size').onchange = () => {
+        document.getElementById('appearance-banner-size-range').value = document.getElementById('appearance-banner-size').value;
+        document.getElementById('appearance-banner-size-label').textContent = `${document.getElementById('appearance-banner-size').value} px`;
+        renderBannerPreview();
+      };
+      document.getElementById('appearance-banner-size-range').oninput = (event) => {
+        document.getElementById('appearance-banner-size').value = String(Math.min(24, Math.max(8, Number(event.target.value))));
+        document.getElementById('appearance-banner-size').dispatchEvent(new Event('change'));
       };
 
+      document.getElementById('appearance-font').onchange = () => renderBannerPreview();
+      document.getElementById('appearance-size').onchange = () => {
+        document.getElementById('appearance-size-range').value = document.getElementById('appearance-size').value;
+        document.getElementById('appearance-size-label').textContent = `${document.getElementById('appearance-size').value} px`;
+      };
+      document.getElementById('appearance-size-range').oninput = (event) => {
+        document.getElementById('appearance-size').value = String(Math.min(26, Math.max(10, Number(event.target.value))));
+        document.getElementById('appearance-size').dispatchEvent(new Event('change'));
+      };
+
+      document.getElementById('btn-apply-appearance').onclick = applyAppearanceFromControls;
+
       document.getElementById('btn-reset-appearance').onclick = () => {
-        appData.appearance = { bannerColor: '#6d28d9', fontFamily: '__system', fontSize: 16 };
+        appData.appearance = {
+          fontFamily: '__system',
+          fontSize: 16,
+          banners: {
+            campaign: Object.assign({}, BANNER_DEFAULTS.campaign),
+            outside: Object.assign({}, BANNER_DEFAULTS.outside)
+          }
+        };
         saveState();
         applyAppearance();
         renderAppearanceControls();
