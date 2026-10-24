@@ -4,6 +4,8 @@ Aplicação web de página única (sem build e sem instalação) para gerir as r
 **Creactivity** da Fundação "la Caixa": calendário semanal por campanha, formulário de reserva para
 grupos escolares e painel de administração com horários, durações, localidades e exportação de reservas.
 
+**Online:** <https://centauropt.github.io/agenda-de-reservas/>
+
 ![Calendário semanal](docs/captura-calendario.png)
 
 ## Funcionalidades
@@ -35,17 +37,18 @@ python -m http.server 8000
 Não há dependências para instalar. O único recurso externo é o Tailwind CSS via CDN
 (`cdn.tailwindcss.com`), pelo que é necessária ligação à internet na primeira carga.
 
-### Publicar no GitHub Pages (recomendado — sem build, sem custos)
+### Publicar no GitHub Pages (ativo — sem build, sem custos)
 
-O repositório já está pronto: `index.html` na raiz e `.nojekyll` a impedir o processamento Jekyll.
+O repositório está pronto: `index.html` na raiz e `.nojekyll` a impedir o processamento Jekyll.
+**A aplicação já está publicada em:**
+
+**https://centauropt.github.io/agenda-de-reservas/**
+
+Para replicar noutra conta ou fork:
 
 1. No GitHub, abrir **Settings → Pages**.
 2. Em **Source**, escolher `Deploy from a branch`.
 3. **Branch:** `main` · **Folder:** `/ (root)` → **Save**.
-
-Ao fim de ~1 minuto a aplicação fica publicada em:
-
-**https://centauropt.github.io/agenda-de-reservas/**
 
 Cada push para `main` republica automaticamente (pode levar até 1 minuto a propagar).
 
