@@ -476,6 +476,14 @@
               <label for="email-from" class="block text-[11px] font-bold text-slate-700">Email da campanha (resposta)</label>
               <input id="email-from" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="campanha@exemplo.pt">
             </div>
+            <div class="space-y-2">
+              <label for="email-notify-to" class="block text-[11px] font-bold text-slate-700">Email da campanha (receber reservas)</label>
+              <input id="email-notify-to" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="reservas@exemplo.pt">
+              <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600">
+                <input id="email-notify-enabled" type="checkbox" class="h-3.5 w-3.5 accent-indigo-600">
+                Enviar também uma notificação para este endereço
+              </label>
+            </div>
           </div>
 
           <div class="p-3 bg-white border border-slate-200 rounded-xl">
@@ -855,7 +863,7 @@
           }
         },
         adminPinHash: '',
-        email: { enabled: false, serviceId: '', templateId: '', publicKey: '', fromName: '', fromEmail: '', subject: '' },
+        email: { enabled: false, serviceId: '', templateId: '', publicKey: '', fromName: '', fromEmail: '', subject: '', notifyEnabled: false, notifyTo: '' },
         branding: {
           logoEmoji: '🎓',
           logoImage: '',
@@ -981,7 +989,9 @@
             publicKey: emailText('publicKey'),
             fromName: emailText('fromName'),
             fromEmail: emailText('fromEmail'),
-            subject: emailText('subject')
+            subject: emailText('subject'),
+            notifyEnabled: email.notifyEnabled === true,
+            notifyTo: emailText('notifyTo')
           };
 
           const branding = parsed.branding && typeof parsed.branding === 'object' ? parsed.branding : {};
@@ -3365,6 +3375,19 @@
           await sendEmail(buildEmailParams(booking, location));
           setEmailStatus(`Email enviado para ${booking.email}.`, 'ok');
           showToast(`Email de confirmação enviado para ${booking.email}.`, 'success');
+
+          if (config.notifyEnabled && config.notifyTo) {
+            const notification = buildEmailParams(booking, location, config.notifyTo);
+            notification.subject = `Nova reserva — ${booking.schoolName || 'Escola'} · ${formatHumanDate(booking.date)} ${booking.sessionStart || ''}`;
+            notification.message = ['Nova reserva recebida.', '', notification.message].join('\n');
+            try {
+              await sendEmail(notification);
+              setEmailStatus(`Email enviado para ${booking.email} e notificação para ${config.notifyTo}.`, 'ok');
+            } catch (error) {
+              const detail = (error && (error.text || error.message)) || 'erro desconhecido';
+              setEmailStatus(`Confirmação enviada; notificação falhou: ${detail}`, 'warn');
+            }
+          }
         } catch (error) {
           const detail = (error && (error.text || error.message)) || 'erro desconhecido';
           setEmailStatus(`Falha no envio: ${detail}`, 'error');
@@ -3393,7 +3416,8 @@
           'email-public-key': 'publicKey',
           'email-from-name': 'fromName',
           'email-from': 'fromEmail',
-          'email-subject': 'subject'
+          'email-subject': 'subject',
+          'email-notify-to': 'notifyTo'
         };
 
         Object.keys(map).forEach((id) => {
@@ -3403,6 +3427,9 @@
 
         const toggle = document.getElementById('email-enabled');
         if (toggle) toggle.checked = config.enabled === true;
+
+        const notifyToggle = document.getElementById('email-notify-enabled');
+        if (notifyToggle) notifyToggle.checked = config.notifyEnabled === true;
 
         setEmailStatus(
           config.enabled
@@ -3425,7 +3452,9 @@
           publicKey: value('email-public-key'),
           fromName: value('email-from-name'),
           fromEmail: value('email-from'),
-          subject: value('email-subject')
+          subject: value('email-subject'),
+          notifyEnabled: !!document.getElementById('email-notify-enabled').checked,
+          notifyTo: value('email-notify-to')
         };
       }
 

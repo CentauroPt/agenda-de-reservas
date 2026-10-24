@@ -211,6 +211,10 @@ resposta e assunto. O template do EmailJS deve usar as variáveis `to_email`, `t
 `grade`, `date`, `start`, `end`, `duration`, `companion`, `companion_phone`, `phone`, `la_caixa`,
 `booking_ref`).
 
+Há ainda a opção **“Email da campanha (receber reservas)”**: quando ativa, cada reserva envia **dois**
+emails — a confirmação para o utilizador e uma **notificação para a campanha**, com assunto
+“Nova reserva — escola · data hora” e todos os dados.
+
 Há um botão **Enviar teste** para validar a configuração. Nota: o EmailJS tem limites no plano gratuito
 (ex.: 200 emails/mês) e o remetente efetivo é o serviço de email ligado à conta.
 
