@@ -566,6 +566,18 @@
               <div class="space-y-2">
                 <label for="tab-admin-input" class="block text-[11px] font-bold text-slate-700">Separador painel</label>
                 <input id="tab-admin-input" class="w-full p-2 border rounded-lg text-xs">
+            </div>
+            <div class="space-y-2">
+              <label for="lock-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Bloquear”</label>
+              <input id="lock-label-input" class="w-full p-2 border rounded-lg text-xs">
+            </div>
+            <div class="space-y-2">
+              <label for="windows-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Repor janelas”</label>
+              <input id="windows-label-input" class="w-full p-2 border rounded-lg text-xs">
+            </div>
+            <div class="space-y-2">
+              <label for="reset-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Limpar Dados Locais”</label>
+              <input id="reset-label-input" class="w-full p-2 border rounded-lg text-xs">
               </div>
             </div>
           </div>
@@ -850,7 +862,10 @@
           adminSubtitle: 'Definição de horários, campanhas, reservas e exportação de dados.',
           publicHeading: 'Selecione uma Sessão para Reservar',
           tabCalendar: '📅 Calendário de Reservas',
-          tabAdmin: '⚙️ Painel Administrador'
+          tabAdmin: '⚙️ Painel Administrador',
+          lockLabel: '🔒 Bloquear',
+          windowsLabel: '🪟 Repor janelas',
+          resetLabel: '🗑️ Limpar Dados Locais'
         },
         bookings: {},
         currentWeekOffset: 0,
@@ -977,7 +992,10 @@
             adminSubtitle: brandingText('adminSubtitle', 'Definição de horários, campanhas, reservas e exportação de dados.'),
             publicHeading: brandingText('publicHeading', 'Selecione uma Sessão para Reservar'),
             tabCalendar: brandingText('tabCalendar', '📅 Calendário de Reservas'),
-            tabAdmin: brandingText('tabAdmin', '⚙️ Painel Administrador')
+            tabAdmin: brandingText('tabAdmin', '⚙️ Painel Administrador'),
+            lockLabel: brandingText('lockLabel', '🔒 Bloquear'),
+            windowsLabel: brandingText('windowsLabel', '🪟 Repor janelas'),
+            resetLabel: brandingText('resetLabel', '🗑️ Limpar Dados Locais')
           };
 
           const appearance = parsed.appearance && typeof parsed.appearance === 'object' ? parsed.appearance : {};
@@ -3469,7 +3487,10 @@
         adminSubtitle: 'Definição de horários, campanhas, reservas e exportação de dados.',
         publicHeading: 'Selecione uma Sessão para Reservar',
         tabCalendar: '📅 Calendário de Reservas',
-        tabAdmin: '⚙️ Painel Administrador'
+        tabAdmin: '⚙️ Painel Administrador',
+        lockLabel: '🔒 Bloquear',
+        windowsLabel: '🪟 Repor janelas',
+        resetLabel: '🗑️ Limpar Dados Locais'
       };
 
       function applyBranding() {
@@ -3514,6 +3535,13 @@
           publicHeading.style.fontFamily = family;
           publicHeading.style.fontSize = titleSize + 'px';
         }
+
+        const lockBtn = document.getElementById('btn-lock-admin');
+        const windowsBtn = document.getElementById('btn-reset-windows');
+        const resetBtn = document.getElementById('btn-reset-data');
+        if (lockBtn) lockBtn.textContent = branding.lockLabel;
+        if (windowsBtn) windowsBtn.textContent = branding.windowsLabel;
+        if (resetBtn) resetBtn.textContent = branding.resetLabel;
 
         document.querySelectorAll('[data-brand-tab="calendar"]').forEach((element) => {
           element.textContent = branding.tabCalendar;
@@ -3609,7 +3637,10 @@
           'admin-subtitle-input': 'adminSubtitle',
           'public-heading-input': 'publicHeading',
           'tab-calendar-input': 'tabCalendar',
-          'tab-admin-input': 'tabAdmin'
+          'tab-admin-input': 'tabAdmin',
+          'lock-label-input': 'lockLabel',
+          'windows-label-input': 'windowsLabel',
+          'reset-label-input': 'resetLabel'
         };
 
         Object.keys(map).forEach((id) => {
@@ -3654,7 +3685,10 @@
           adminSubtitle: get('admin-subtitle-input'),
           publicHeading: get('public-heading-input') || BRANDING_DEFAULTS.publicHeading,
           tabCalendar: get('tab-calendar-input') || BRANDING_DEFAULTS.tabCalendar,
-          tabAdmin: get('tab-admin-input') || BRANDING_DEFAULTS.tabAdmin
+          tabAdmin: get('tab-admin-input') || BRANDING_DEFAULTS.tabAdmin,
+          lockLabel: get('lock-label-input') || BRANDING_DEFAULTS.lockLabel,
+          windowsLabel: get('windows-label-input') || BRANDING_DEFAULTS.windowsLabel,
+          resetLabel: get('reset-label-input') || BRANDING_DEFAULTS.resetLabel
         };
       }
 
@@ -3969,6 +4003,28 @@
           }
         }
         if (titleSizeSelect) titleSizeSelect.value = String(appData.appearance.globalTitleSize || 0);
+
+        const appFontSelect = document.getElementById('appearance-font');
+        const appSizeSelect = document.getElementById('appearance-size');
+        if (appFontSelect && !appFontSelect.options.length) {
+          FONT_OPTIONS.forEach((option) => {
+            const item = document.createElement('option');
+            item.value = option.value;
+            item.textContent = option.label;
+            item.style.fontFamily = option.value === '__system' ? '' : option.value;
+            appFontSelect.appendChild(item);
+          });
+        }
+        if (appSizeSelect && !appSizeSelect.options.length) {
+          for (let px = 10; px <= 26; px++) {
+            const item = document.createElement('option');
+            item.value = String(px);
+            item.textContent = `${px} px`;
+            appSizeSelect.appendChild(item);
+          }
+        }
+        if (appFontSelect) appFontSelect.value = appData.appearance.fontFamily || '__system';
+        if (appSizeSelect) appSizeSelect.value = String(appData.appearance.fontSize || 16);
 
         renderBannerPreview();
       }

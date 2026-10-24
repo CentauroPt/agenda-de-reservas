@@ -221,7 +221,8 @@ Na sub-página **Google Calendar** existe o bloco **🪪 Identidade**, que permi
 - **título** e **subtítulo** do cabeçalho;
 - **título e subtítulo do painel** de administração;
 - **título do calendário público** (“Escolha a sessão…”);
-- **etiquetas dos separadores** (Calendário / Gestão);
+- **etiquetas dos separadores** (Calendário / Gestão) e **dos botões do painel** (Bloquear, Repor
+  janelas, Limpar Dados Locais);
 - **fonte do cabeçalho** (70 opções) e **três tamanhos**: título (10–40 px), título do painel
   (14–48 px) e subtítulos (8–28 px).
 
