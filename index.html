@@ -192,6 +192,13 @@
         </div>
       </div>
 
+      <div class="flex gap-1 bg-slate-100 p-1 rounded-xl w-fit">
+        <button id="btn-admin-main" class="px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm">🗓️ Horários e reservas</button>
+        <button id="btn-admin-google" class="px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900">🔗 Google Calendar</button>
+      </div>
+
+      <div id="admin-main-view" class="space-y-6">
+
       <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <h3 class="font-bold text-sm text-slate-800">📅 Calendário da semana</h3>
@@ -318,6 +325,70 @@
           </table>
         </div>
       </div>
+      </div>
+      <!-- /admin-main-view -->
+
+      <div id="admin-google-view" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">🔗 Ligação ao Google Calendar</h2>
+              <p class="text-xs text-slate-500 mt-1">A aplicação fala diretamente com a API do Google a partir deste browser. Aqui fica apenas o Client ID, a API key e o ID do calendário — nenhum segredo é enviado para servidores nossos.</p>
+            </div>
+            <span id="google-connection-badge" class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">Desligado</span>
+          </div>
+
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <p class="text-xs font-bold text-slate-700">1. Preparar no Google Cloud (só uma vez)</p>
+            <ol class="text-xs text-slate-600 space-y-1.5 list-decimal list-inside">
+              <li>Cria um projeto em <a class="text-indigo-600 underline" href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener">console.cloud.google.com</a>.</li>
+              <li>Ativa a <a class="text-indigo-600 underline" href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com" target="_blank" rel="noopener">Google Calendar API</a> nesse projeto.</li>
+              <li>Em <b>OAuth consent screen</b>, escolhe <b>External</b>, preenche nome e email e adiciona a tua conta em <b>Test users</b>.</li>
+              <li>Em <b>Credentials → Create credentials → OAuth client ID</b>, escolhe <b>Web application</b>.</li>
+              <li><b>Authorized JavaScript origins</b> → adiciona <code id="google-origin" class="bg-white border rounded px-1">…</code></li>
+              <li><b>Authorized redirect URIs</b> → adiciona <code id="google-redirect" class="bg-white border rounded px-1">…</code></li>
+              <li>Copia o <b>Client ID</b> (termina em <code>.apps.googleusercontent.com</code>) para o campo abaixo e guarda.</li>
+            </ol>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="md:col-span-2">
+              <label for="google-client-id" class="block text-[11px] font-bold text-slate-700 mb-1">Client ID *</label>
+              <input id="google-client-id" autocomplete="off" spellcheck="false" placeholder="1234567890-abcdef.apps.googleusercontent.com" class="w-full p-2 border rounded-lg text-xs font-mono">
+            </div>
+            <div>
+              <label for="google-calendar-id" class="block text-[11px] font-bold text-slate-700 mb-1">Calendar ID</label>
+              <input id="google-calendar-id" autocomplete="off" spellcheck="false" placeholder="primary" class="w-full p-2 border rounded-lg text-xs font-mono">
+              <p class="text-[10px] text-slate-400 mt-1">Usa <code>primary</code> para o calendário principal, ou o ID de outro calendário.</p>
+            </div>
+            <div>
+              <label for="google-api-key" class="block text-[11px] font-bold text-slate-700 mb-1">API Key (opcional)</label>
+              <input id="google-api-key" autocomplete="off" spellcheck="false" placeholder="Só necessária para leituras públicas" class="w-full p-2 border rounded-lg text-xs font-mono">
+              <p class="text-[10px] text-slate-400 mt-1">Não é usada na exportação autenticada; fica guardada para leituras públicas.</p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-google-save" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-sm">💾 Guardar configuração</button>
+            <button id="btn-google-connect" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-sm">🔐 Ligar ao Google</button>
+            <button id="btn-google-disconnect" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">Desligar</button>
+          </div>
+
+          <div id="google-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Ainda não configurado.</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div>
+            <h3 class="font-bold text-sm text-slate-800">Ações com a conta ligada</h3>
+            <p class="text-xs text-slate-500 mt-1">O token de acesso dura cerca de 1 hora e fica apenas na memória deste separador — ao recarregar a página é preciso voltar a ligar.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-google-test" disabled class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-sm">🔍 Testar ligação</button>
+            <button id="btn-google-export" disabled class="px-4 py-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-sm">📤 Exportar reservas para o Google</button>
+          </div>
+          <div id="google-log" class="text-xs text-slate-600 space-y-1 max-h-64 overflow-y-auto"></div>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -405,6 +476,7 @@
         selectedLocation: 0,
         weeklySlots: defaultWeeklySlots(),
         dateSlots: {},
+        google: { clientId: '', apiKey: '', calendarId: 'primary' },
         bookings: {},
         currentWeekOffset: 0,
         selectedSession: null
@@ -501,6 +573,13 @@
           appData.bookings = migrateBookings(parsed.bookings, appData.locations);
           appData.dateSlots = normalizeDateSlots(parsed.dateSlots);
 
+          const google = parsed.google && typeof parsed.google === 'object' ? parsed.google : {};
+          appData.google = {
+            clientId: typeof google.clientId === 'string' ? google.clientId : '',
+            apiKey: typeof google.apiKey === 'string' ? google.apiKey : '',
+            calendarId: typeof google.calendarId === 'string' && google.calendarId ? google.calendarId : 'primary'
+          };
+
           // Persiste de imediato o estado normalizado (ids de campanha, chaves de reserva)
           saveState();
         } catch (error) {
@@ -515,6 +594,7 @@
             selectedLocation: appData.selectedLocation,
             weeklySlots: appData.weeklySlots,
             dateSlots: appData.dateSlots,
+            google: appData.google,
             bookings: appData.bookings
           }));
         } catch (error) {
@@ -2279,12 +2359,280 @@
         showToast('Dados locais apagados.', 'success');
       };
 
+      /* ---------- Google Calendar ---------- */
+
+      const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+      let googleToken = null;
+
+      function googleOrigin() {
+        return window.location.origin && window.location.origin !== 'null'
+          ? window.location.origin
+          : 'https://centauropt.github.io';
+      }
+
+      function googleRedirect() {
+        return `${googleOrigin()}${window.location.pathname}`;
+      }
+
+      function fillGoogleUi() {
+        const config = appData.google || {};
+        const clientInput = document.getElementById('google-client-id');
+        const keyInput = document.getElementById('google-api-key');
+        const calendarInput = document.getElementById('google-calendar-id');
+        if (clientInput) clientInput.value = config.clientId || '';
+        if (keyInput) keyInput.value = config.apiKey || '';
+        if (calendarInput) calendarInput.value = config.calendarId || 'primary';
+
+        const originEl = document.getElementById('google-origin');
+        const redirectEl = document.getElementById('google-redirect');
+        if (originEl) originEl.textContent = googleOrigin();
+        if (redirectEl) redirectEl.textContent = googleRedirect();
+
+        if (!googleConnected()) {
+          const config = appData.google || {};
+          setGoogleStatus(
+            config.clientId
+              ? 'Client ID guardado. Clica em "Ligar ao Google" para autorizar a conta.'
+              : 'Ainda não configurado. Segue os passos 1 a 7 acima.',
+            'info'
+          );
+        }
+      }
+
+      function setGoogleStatus(message, tone) {
+        const element = document.getElementById('google-status');
+        if (!element) return;
+        const tones = {
+          ok: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+          warn: 'bg-amber-50 border-amber-200 text-amber-800',
+          error: 'bg-rose-50 border-rose-200 text-rose-800',
+          info: 'bg-slate-50 border-slate-200 text-slate-600'
+        };
+        element.className = `text-xs font-semibold border rounded-xl px-3 py-2 ${tones[tone] || tones.info}`;
+        element.textContent = message;
+      }
+
+      function googleLog(message, tone) {
+        const container = document.getElementById('google-log');
+        if (!container) return;
+        const line = document.createElement('div');
+        line.className = tone === 'error' ? 'text-rose-600' : (tone === 'ok' ? 'text-emerald-700' : 'text-slate-600');
+        line.textContent = message;
+        container.prepend(line);
+      }
+
+      function saveGoogleConfig() {
+        const clientId = document.getElementById('google-client-id').value.trim();
+        const apiKey = document.getElementById('google-api-key').value.trim();
+        const calendarId = document.getElementById('google-calendar-id').value.trim() || 'primary';
+
+        if (!/\.apps\.googleusercontent\.com$/.test(clientId)) {
+          setGoogleStatus('O Client ID tem de terminar em .apps.googleusercontent.com.', 'error');
+          return false;
+        }
+
+        appData.google = { clientId, apiKey, calendarId };
+        saveState();
+        setGoogleStatus('Configuração guardada neste navegador.', 'ok');
+        return true;
+      }
+
+      function loadGoogleScript() {
+        return new Promise((resolve, reject) => {
+          if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+            resolve();
+            return;
+          }
+          const script = document.createElement('script');
+          script.src = 'https://accounts.google.com/gsi/client';
+          script.async = true;
+          script.defer = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Não foi possível carregar o Google Identity Services (verifica a ligação à internet).'));
+          document.head.appendChild(script);
+        });
+      }
+
+      async function connectGoogle() {
+        if (!saveGoogleConfig()) return;
+
+        try {
+          setGoogleStatus('A carregar o Google Identity Services…', 'info');
+          await loadGoogleScript();
+          setGoogleStatus('A abrir a janela de autorização do Google… Se nada acontecer, permite popups para este site.', 'info');
+        } catch (error) {
+          setGoogleStatus(error.message, 'error');
+          return;
+        }
+
+        try {
+          const tokenClient = window.google.accounts.oauth2.initTokenClient({
+            client_id: appData.google.clientId,
+            scope: GOOGLE_SCOPE,
+            callback: (response) => {
+              if (response.error) {
+                setGoogleStatus(`O Google recusou a autorização: ${response.error}`, 'error');
+                return;
+              }
+              googleToken = {
+                access_token: response.access_token,
+                expires_at: Date.now() + (Number(response.expires_in) || 3600) * 1000
+              };
+              renderGoogleConnection();
+              setGoogleStatus('Ligado ao Google Calendar. Já podes testar a ligação e exportar.', 'ok');
+              googleLog('Autorização concluída.', 'ok');
+            }
+          });
+          tokenClient.requestAccessToken({ prompt: googleToken ? '' : 'consent' });
+        } catch (error) {
+          setGoogleStatus(`Erro ao iniciar a autorização: ${error.message}`, 'error');
+        }
+      }
+
+      function googleConnected() {
+        return !!(googleToken && Date.now() < googleToken.expires_at - 30000);
+      }
+
+      function renderGoogleConnection() {
+        const badge = document.getElementById('google-connection-badge');
+        const testButton = document.getElementById('btn-google-test');
+        const exportButton = document.getElementById('btn-google-export');
+        const connected = googleConnected();
+
+        if (badge) {
+          badge.className = connected
+            ? 'shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800'
+            : 'shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500';
+          badge.textContent = connected ? 'Ligado' : 'Desligado';
+        }
+        if (testButton) testButton.disabled = !connected;
+        if (exportButton) exportButton.disabled = !connected;
+      }
+
+      function disconnectGoogle() {
+        if (googleToken && window.google && window.google.accounts && window.google.accounts.oauth2) {
+          try { window.google.accounts.oauth2.revoke(googleToken.access_token); } catch (error) { /* ignora */ }
+        }
+        googleToken = null;
+        renderGoogleConnection();
+        setGoogleStatus('Sessão Google terminada neste browser.', 'info');
+      }
+
+      async function googleRequest(path, options) {
+        if (!googleConnected()) throw new Error('Sem sessão Google válida. Liga-te primeiro.');
+        const response = await fetch(`https://www.googleapis.com/calendar/v3${path}`, Object.assign({
+          headers: {
+            Authorization: `Bearer ${googleToken.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }, options || {}));
+        if (!response.ok) {
+          const text = await response.text();
+          throw new Error(`Google API ${response.status}: ${text.slice(0, 200)}`);
+        }
+        return response.json();
+      }
+
+      async function testGoogle() {
+        try {
+          const calendarId = (appData.google && appData.google.calendarId) || 'primary';
+          const calendar = await googleRequest(`/calendars/${encodeURIComponent(calendarId)}`);
+          setGoogleStatus(`Ligado a "${calendar.summary}"${calendar.timeZone ? ' · ' + calendar.timeZone : ''}.`, 'ok');
+          googleLog(`Calendário: ${calendar.summary} (${calendar.id})`, 'ok');
+        } catch (error) {
+          setGoogleStatus(error.message, 'error');
+          googleLog(error.message, 'error');
+        }
+      }
+
+      async function exportGoogleBookings() {
+        const entries = getBookingEntries();
+        if (!entries.length) {
+          setGoogleStatus('Não há reservas para exportar.', 'warn');
+          return;
+        }
+
+        const calendarId = encodeURIComponent((appData.google && appData.google.calendarId) || 'primary');
+        let created = 0;
+        let failed = 0;
+
+        setGoogleStatus(`A exportar ${entries.length} reserva(s)…`, 'info');
+
+        for (let index = 0; index < entries.length; index++) {
+          const entry = entries[index];
+          const booking = entry.booking;
+          if (!booking.sessionStart || !booking.sessionEnd) {
+            failed++;
+            continue;
+          }
+
+          const body = {
+            summary: `Creactivity — ${booking.schoolName || 'Escola'}`,
+            description: [
+              `${booking.students || 0} alunos${booking.grade ? ' · ' + booking.grade : ''}`,
+              `Responsável: ${booking.firstName || ''} ${booking.lastName || ''} (${booking.phone || ''})`,
+              `Acompanhante: ${booking.companionName || ''} (${booking.companionPhone || ''})`,
+              booking.laCaixa === 'Sim' ? `Fundação la Caixa: ${booking.laCaixaDetails || 'sim'}` : 'Fundação la Caixa: não'
+            ].join('\n'),
+            location: entry.locationName,
+            start: { dateTime: `${entry.date}T${booking.sessionStart}:00`, timeZone: 'Europe/Lisbon' },
+            end: { dateTime: `${entry.date}T${booking.sessionEnd}:00`, timeZone: 'Europe/Lisbon' },
+            extendedProperties: { private: { agendaReserva: entry.key } }
+          };
+
+          try {
+            await googleRequest(`/calendars/${calendarId}/events`, { method: 'POST', body: JSON.stringify(body) });
+            created++;
+            googleLog(`✓ ${formatHumanDate(entry.date)} ${booking.sessionStart} · ${booking.schoolName || ''}`, 'ok');
+          } catch (error) {
+            failed++;
+            googleLog(`✗ ${formatHumanDate(entry.date)} ${booking.sessionStart}: ${error.message}`, 'error');
+          }
+        }
+
+        setGoogleStatus(`${created} evento(s) criados no Google${failed ? `, ${failed} falha(s)` : ''}.`, failed ? 'warn' : 'ok');
+      }
+
+      function showAdminView(view) {
+        const main = document.getElementById('admin-main-view');
+        const googleView = document.getElementById('admin-google-view');
+        const mainButton = document.getElementById('btn-admin-main');
+        const googleButton = document.getElementById('btn-admin-google');
+        if (!main || !googleView) return;
+
+        const isMain = view !== 'google';
+        main.classList.toggle('hidden', !isMain);
+        googleView.classList.toggle('hidden', isMain);
+
+        mainButton.className = isMain
+          ? 'px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm'
+          : 'px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900';
+        googleButton.className = !isMain
+          ? 'px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm'
+          : 'px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900';
+
+        if (!isMain) {
+          fillGoogleUi();
+          renderGoogleConnection();
+        }
+      }
+
+      document.getElementById('btn-admin-main').onclick = () => showAdminView('main');
+      document.getElementById('btn-admin-google').onclick = () => showAdminView('google');
+      document.getElementById('btn-google-save').onclick = saveGoogleConfig;
+      document.getElementById('btn-google-connect').onclick = connectGoogle;
+      document.getElementById('btn-google-disconnect').onclick = disconnectGoogle;
+      document.getElementById('btn-google-test').onclick = testGoogle;
+      document.getElementById('btn-google-export').onclick = exportGoogleBookings;
+
       loadState();
       renderLocationSelect();
       renderAdminLocations();
       renderAdminSessions();
       renderAdminOverrides();
       renderBookings();
+      fillGoogleUi();
+      renderGoogleConnection();
       jumpToLocationStart(currentLocation());
       renderCalendar();
     })();

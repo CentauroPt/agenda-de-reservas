@@ -163,6 +163,24 @@ As chaves de reserva passaram a usar o `id` da campanha (e não o nome), para qu
 localidade não perca reservas. Dados de versões anteriores, guardados por nome, são migrados
 automaticamente na primeira abertura.
 
+## Ligação ao Google Calendar (opcional)
+
+No painel de administração existe a sub-página **Google Calendar**, com os campos necessários:
+
+| Campo | Onde obter |
+|---|---|
+| **Client ID** | Google Cloud → Credentials → OAuth client ID (Web application) |
+| **Calendar ID** | `primary` para o calendário principal, ou o ID de outro calendário |
+| **API Key** | Opcional; só para leituras públicas |
+
+Antes de ligar, no Google Cloud: ativar a Calendar API, configurar o *OAuth consent screen* (External +
+o teu email em *Test users*) e adicionar às **Authorized JavaScript origins** e **Authorized redirect
+URIs** o endereço mostrado na própria página (ex.: `https://centauropt.github.io`).
+
+Depois de autorizar, a página permite **testar a ligação** e **exportar as reservas** para o calendário
+como eventos (título, descrição, local, hora de início e fim em `Europe/Lisbon`). O token de acesso
+fica apenas na memória do separador e expira ao fim de ~1 hora.
+
 ## Limitações conhecidas
 
 - **Sem backend:** cada navegador tem os seus próprios dados. Não há sincronização entre dispositivos
