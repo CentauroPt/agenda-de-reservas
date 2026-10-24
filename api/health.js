@@ -1,3 +1,4 @@
+// diagnostico de configuracao da API
 'use strict';
 
 module.exports = (req, res) => {
