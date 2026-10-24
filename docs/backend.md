@@ -67,11 +67,22 @@ node tests/backend-bookings.test.js
 Os testes usam um cliente Google simulado e um armazenamento temporário — não precisam de
 credenciais nem de rede.
 
-## Próxima fase (frontend)
+## Frontend ligado (fase 2)
 
-1. Campo **“Servidor de reservas”** no painel (URL base) + `ADMIN_TOKEN` para operações de gestão.
-2. Com servidor configurado: `POST /api/bookings` ao reservar, `DELETE` no cancelamento, `GET` para o
-   calendário; sem servidor, mantém-se o `localStorage` atual.
-3. O email passa a incluir o link de cancelamento do servidor (`?cancelar=<cancelToken>`).
+Na página **Google Calendar** existe o cartão **🌐 Servidor de reservas**:
 
-Enquanto essa fase não estiver concluída, a aplicação continua a funcionar exatamente como hoje.
+- **Endereço do servidor** (ex.: `https://agenda.vercel.app`);
+- **Token de administração** (`ADMIN_TOKEN`), usado para listar com detalhes e sincronizar;
+- **Testar ligação** e **Sincronizar agora**.
+
+Comportamento:
+
+| Com servidor | Sem servidor |
+|---|---|
+| reservas vêm de `GET /api/bookings` | reservas do `localStorage` |
+| reservar faz `POST /api/bookings` (409 → “horário já reservado”) | guarda localmente |
+| cancelar faz `DELETE /api/bookings?id=` ou `?token=` | apaga localmente |
+| admin vê escola/contactos (token) | admin vê o que tem localmente |
+
+`GET /api/bookings` sem token devolve apenas localidade/data/horas (sem dados pessoais); com token
+devolve tudo. Testado ponta a ponta com um servidor local simulado (`tests/mock-server.js`).

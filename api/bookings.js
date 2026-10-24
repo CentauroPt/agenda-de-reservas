@@ -21,8 +21,20 @@ function parseBody(req) {
 module.exports = async (req, res) => {
   try {
     if (req.method === 'GET') {
-      if (!authorized(req)) return res.status(401).json({ error: 'nao autorizado' });
       const list = await store.readAll();
+
+      if (!authorized(req)) {
+        return res.status(200).json({
+          bookings: list.map((item) => ({
+            locationId: item.locationId,
+            locationName: item.locationName,
+            date: item.date,
+            sessionStart: item.sessionStart,
+            sessionEnd: item.sessionEnd
+          }))
+        });
+      }
+
       return res.status(200).json({ bookings: list });
     }
 
@@ -70,6 +82,18 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'DELETE') {
+      const bookingId = (req.query && req.query.id) || '';
+
+      if (bookingId) {
+        if (!authorized(req)) return res.status(401).json({ error: 'nao autorizado' });
+        const all = await store.readAll();
+        const position = all.findIndex((item) => item.id === bookingId);
+        if (position < 0) return res.status(404).json({ error: 'reserva nao encontrada' });
+        const [gone] = all.splice(position, 1);
+        await store.writeAll(all);
+        return res.status(200).json({ cancelled: gone.id, googleEventId: gone.googleEventId || null });
+      }
+
       const token = (req.query && req.query.token) || '';
       if (!token) return res.status(400).json({ error: 'token em falta' });
 

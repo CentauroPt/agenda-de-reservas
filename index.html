@@ -430,6 +430,28 @@
       <!-- /admin-main-view -->
 
       <div id="admin-google-view" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🌐 Servidor de reservas</h2>
+            <p class="text-xs text-slate-500 mt-1">Com servidor, as reservas ficam partilhadas entre dispositivos e sincronizam com o Google Calendar. Sem servidor, a app continua a usar apenas este navegador.</p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label for="api-base-url" class="block text-[11px] font-bold text-slate-700">Endereço do servidor</label>
+              <input id="api-base-url" class="w-full p-2 border rounded-lg text-xs font-mono" placeholder="https://agenda.vercel.app">
+            </div>
+            <div class="space-y-2">
+              <label for="api-admin-token" class="block text-[11px] font-bold text-slate-700">Token de administração</label>
+              <input id="api-admin-token" type="password" class="w-full p-2 border rounded-lg text-xs font-mono" placeholder="ADMIN_TOKEN">
+            </div>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-api-save" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-sm">Guardar</button>
+            <button id="btn-api-test" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-sm">Testar ligação</button>
+            <button id="btn-api-sync" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold shadow-sm">Sincronizar agora</button>
+          </div>
+          <div id="api-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Sem servidor: a app funciona só neste navegador.</div>
+        </div>
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div class="flex items-start justify-between gap-4">
             <div>
@@ -864,6 +886,7 @@
         },
         adminPinHash: '',
         email: { enabled: false, serviceId: '', templateId: '', publicKey: '', fromName: '', fromEmail: 'portugal@creactivitybus.com', subject: '', notifyEnabled: true, notifyTo: 'portugal@creactivitybus.com' },
+        api: { baseUrl: '', adminToken: '' },
         branding: {
           logoEmoji: '🎓',
           logoImage: '',
@@ -980,6 +1003,12 @@
           appData.dateSlots = normalizeDateSlots(parsed.dateSlots);
           appData.adminPinHash = typeof parsed.adminPinHash === 'string' ? parsed.adminPinHash : '';
 
+          const api = parsed.api && typeof parsed.api === 'object' ? parsed.api : {};
+          appData.api = {
+            baseUrl: typeof api.baseUrl === 'string' ? api.baseUrl.trim() : '',
+            adminToken: typeof api.adminToken === 'string' ? api.adminToken.trim() : ''
+          };
+
           const email = parsed.email && typeof parsed.email === 'object' ? parsed.email : {};
           const emailText = (key) => (typeof email[key] === 'string' ? email[key] : '');
           appData.email = {
@@ -1070,6 +1099,7 @@
             adminPinHash: appData.adminPinHash,
             branding: appData.branding,
             email: appData.email,
+            api: appData.api,
             bookings: appData.bookings
           }));
         } catch (error) {
@@ -2298,9 +2328,10 @@
         });
       }
 
-      function cancelBooking(entry) {
+      async function cancelBooking(entry) {
         const label = `${entry.booking.schoolName || 'esta reserva'} · ${formatHumanDate(entry.date)} ${entry.start}`;
         if (!confirm(`Cancelar a reserva de ${label}?`)) return;
+        await deleteBookingOnServer(entry.booking);
         delete appData.bookings[entry.key];
         saveState();
         renderBookings();
@@ -2660,7 +2691,7 @@
         laDetails.value = '';
       };
 
-      bookingForm.addEventListener('submit', (event) => {
+      bookingForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         if (!appData.selectedSession) return;
 
@@ -2685,7 +2716,7 @@
           return;
         }
 
-        appData.bookings[key] = {
+        const record = {
           locationId: location ? location.id : '',
           locationName: location ? location.name : '',
           date: day.fullDate,
@@ -2706,6 +2737,26 @@
           createdAt: new Date().toISOString(),
           cancelToken: makeCancelToken()
         };
+
+        if (apiConfigured()) {
+          try {
+            const stored = await apiRequest('/api/bookings', { method: 'POST', body: JSON.stringify(record) });
+            if (stored && stored.booking) {
+              record.id = stored.booking.id;
+              record.cancelToken = stored.booking.cancelToken || record.cancelToken;
+            }
+          } catch (error) {
+            if (error.status === 409) {
+              showToast('Este horário já está reservado.', 'error');
+              closeModal();
+              await loadBookingsFromServer();
+              return;
+            }
+            showToast('Servidor indisponível: a guardar apenas neste navegador.', 'error');
+          }
+        }
+
+        appData.bookings[key] = record;
 
         saveState();
         closeModal();
@@ -3195,6 +3246,128 @@
         showToast('Dados locais apagados.', 'success');
       };
 
+      /* ---------- servidor de reservas ---------- */
+
+      function apiConfigured() {
+        return !!(appData.api && appData.api.baseUrl);
+      }
+
+      function apiBase() {
+        return String((appData.api && appData.api.baseUrl) || '').replace(/\/+$/, '');
+      }
+
+      function setApiStatus(message, tone) {
+        const element = document.getElementById('api-status');
+        if (!element) return;
+        const tones = {
+          ok: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+          warn: 'bg-amber-50 border-amber-200 text-amber-800',
+          error: 'bg-rose-50 border-rose-200 text-rose-800',
+          info: 'bg-slate-50 border-slate-200 text-slate-600'
+        };
+        element.className = `text-xs font-semibold border rounded-xl px-3 py-2 ${tones[tone] || tones.info}`;
+        element.textContent = message;
+      }
+
+      async function apiRequest(path, options) {
+        const base = apiBase();
+        if (!base) throw new Error('Servidor não configurado');
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (appData.api.adminToken) headers['x-admin-token'] = appData.api.adminToken;
+
+        const response = await fetch(base + path, Object.assign({}, options || {}, {
+          headers: Object.assign(headers, (options && options.headers) || {})
+        }));
+
+        let data = {};
+        try { data = await response.json(); } catch (error) { data = {}; }
+
+        if (!response.ok) {
+          const failure = new Error(data.error || `Erro ${response.status}`);
+          failure.status = response.status;
+          throw failure;
+        }
+
+        return data;
+      }
+
+      async function loadBookingsFromServer() {
+        if (!apiConfigured()) return;
+
+        try {
+          const data = await apiRequest('/api/bookings');
+          const map = {};
+
+          (data.bookings || []).forEach((item) => {
+            map[`${item.locationId}|${item.date}|${item.sessionStart}`] = Object.assign({}, item);
+          });
+
+          appData.bookings = map;
+          saveState();
+          renderCalendar();
+          renderBookings();
+          setApiStatus(`Ligado a ${apiBase()} · ${(data.bookings || []).length} reserva(s).`, 'ok');
+        } catch (error) {
+          setApiStatus(`Servidor indisponível (${error.message}). A usar dados locais.`, 'warn');
+        }
+      }
+
+      async function deleteBookingOnServer(booking) {
+        if (!apiConfigured() || !booking) return;
+
+        try {
+          if (booking.id && appData.api.adminToken) {
+            await apiRequest(`/api/bookings?id=${encodeURIComponent(booking.id)}`, { method: 'DELETE' });
+          } else if (booking.cancelToken) {
+            await apiRequest(`/api/bookings?token=${encodeURIComponent(booking.cancelToken)}`, { method: 'DELETE' });
+          }
+        } catch (error) {
+          /* o cancelamento local continua a valer */
+        }
+      }
+
+      function renderApiControls() {
+        const url = document.getElementById('api-base-url');
+        const token = document.getElementById('api-admin-token');
+        if (url) url.value = (appData.api && appData.api.baseUrl) || '';
+        if (token) token.value = (appData.api && appData.api.adminToken) || '';
+        setApiStatus(
+          apiConfigured() ? `Servidor: ${apiBase()}` : 'Sem servidor: a app funciona só neste navegador.',
+          apiConfigured() ? 'ok' : 'info'
+        );
+      }
+
+      document.getElementById('btn-api-save').onclick = async () => {
+        appData.api = {
+          baseUrl: (document.getElementById('api-base-url').value || '').trim(),
+          adminToken: (document.getElementById('api-admin-token').value || '').trim()
+        };
+        saveState();
+        renderApiControls();
+        showToast(appData.api.baseUrl ? 'Servidor guardado.' : 'Servidor removido; modo local.', 'success');
+        if (apiConfigured()) await loadBookingsFromServer();
+      };
+
+      document.getElementById('btn-api-test').onclick = async () => {
+        try {
+          const data = await apiRequest('/api/bookings');
+          setApiStatus(`Ligação OK · ${(data.bookings || []).length} reserva(s) no servidor.`, 'ok');
+        } catch (error) {
+          setApiStatus(`Falhou: ${error.message}`, 'error');
+        }
+      };
+
+      document.getElementById('btn-api-sync').onclick = async () => {
+        try {
+          const result = await apiRequest('/api/sync', { method: 'POST' });
+          setApiStatus(`Sincronizado · enviadas ${result.pushed} · atualizadas ${result.updated} · removidas ${result.removed}`, 'ok');
+          await loadBookingsFromServer();
+        } catch (error) {
+          setApiStatus(`Sincronização falhou: ${error.message}`, 'error');
+        }
+      };
+
       /* ---------- cancelamento por link ---------- */
 
       function makeCancelToken() {
@@ -3257,7 +3430,8 @@
         document.getElementById('cancel-modal').classList.add('hidden');
       }
 
-      function confirmCancellation(entry) {
+      async function confirmCancellation(entry) {
+        await deleteBookingOnServer(entry.booking);
         delete appData.bookings[entry.key];
         saveState();
         renderCalendar();
@@ -4638,7 +4812,9 @@
       renderBrandingControls();
       applyBranding();
       renderEmailControls();
+      renderApiControls();
       handleCancelLink();
+      loadBookingsFromServer();
       initAdminWindows();
       jumpToLocationStart(currentLocation());
       renderCalendar();

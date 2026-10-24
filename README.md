@@ -185,6 +185,14 @@ automaticamente na primeira abertura.
 - “Esqueci o PIN” permite recomeçar, mas **apaga os dados deste navegador** (reservas, campanhas,
   configurações).
 
+## Servidor de reservas (opcional)
+
+Com um servidor configurado (cartão **🌐 Servidor de reservas**, na página Google Calendar) as reservas
+passam a ser partilhadas entre dispositivos e a sincronizar com o Google Calendar. Sem servidor, a app
+continua a guardar tudo no `localStorage` deste navegador — não é preciso configurar nada.
+
+O backend (funções `api/`) e as instruções de deploy estão em `docs/backend.md`.
+
 ## Email de confirmação
 
 Na sub-página **Google Calendar** existe o bloco **✉️ Email de confirmação**. Quando está ativo, cada
