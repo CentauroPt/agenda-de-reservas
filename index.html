@@ -452,6 +452,7 @@
           </div>
           <div id="api-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Sem servidor: a app funciona só neste navegador.</div>
         </div>
+
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div class="flex items-start justify-between gap-4">
             <div>
@@ -496,7 +497,7 @@
             </div>
             <div class="space-y-2">
               <label for="email-from" class="block text-[11px] font-bold text-slate-700">Email da campanha (resposta)</label>
-              <input id="email-from" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="portugal@creactivitybus.com">
+              <input id="email-from" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="campanha@exemplo.pt">
             </div>
             <div class="space-y-2">
               <label for="email-notify-to" class="block text-[11px] font-bold text-slate-700">Email da campanha (receber reservas)</label>
@@ -506,6 +507,7 @@
                 Enviar também uma notificação para este endereço
               </label>
             </div>
+
           </div>
 
           <div class="p-3 bg-white border border-slate-200 rounded-xl">
@@ -526,9 +528,8 @@
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900">🪪 Identidade</h2>
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🪪 Identidade</h2>
             <p class="text-xs text-slate-500 mt-1">Ícone/logo, título, subtítulo e textos do cabeçalho. A imagem fica guardada neste navegador.</p>
           </div>
 
@@ -601,19 +602,20 @@
               <div class="space-y-2">
                 <label for="tab-admin-input" class="block text-[11px] font-bold text-slate-700">Separador painel</label>
                 <input id="tab-admin-input" class="w-full p-2 border rounded-lg text-xs">
-            </div>
-            <div class="space-y-2">
-              <label for="lock-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Bloquear”</label>
-              <input id="lock-label-input" class="w-full p-2 border rounded-lg text-xs">
-            </div>
-            <div class="space-y-2">
-              <label for="windows-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Repor janelas”</label>
-              <input id="windows-label-input" class="w-full p-2 border rounded-lg text-xs">
-            </div>
-            <div class="space-y-2">
-              <label for="reset-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Limpar Dados Locais”</label>
-              <input id="reset-label-input" class="w-full p-2 border rounded-lg text-xs">
               </div>
+              <div class="space-y-2">
+                <label for="lock-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Bloquear”</label>
+                <input id="lock-label-input" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+              <div class="space-y-2">
+                <label for="windows-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Repor janelas”</label>
+                <input id="windows-label-input" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+              <div class="space-y-2">
+                <label for="reset-label-input" class="block text-[11px] font-bold text-slate-700">Botão “Limpar Dados Locais”</label>
+                <input id="reset-label-input" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+
             </div>
           </div>
 
@@ -622,7 +624,6 @@
             <button id="btn-reset-branding" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">Repor identidade</button>
           </div>
           <div id="branding-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Identidade por omissão.</div>
-        </div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
@@ -729,7 +730,7 @@
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div class="flex items-start justify-between gap-4">
             <div>
-              <h2 class="text-lg font-bold text-slate-900">🔗 Ligação ao Google Calendar</h2>
+            <h2 class="text-lg font-bold text-slate-900">🔗 Ligação ao Google Calendar</h2>
               <p class="text-xs text-slate-500 mt-1">A aplicação fala diretamente com a API do Google a partir deste browser. Aqui fica apenas o Client ID, a API key e o ID do calendário — nenhum segredo é enviado para servidores nossos.</p>
             </div>
             <span id="google-connection-badge" class="shrink-0 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500">Desligado</span>
