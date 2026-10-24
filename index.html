@@ -4431,7 +4431,7 @@
 
       /* ---------- janelas arrastaveis do painel ---------- */
 
-      const WINDOW_STORAGE_KEY = 'agenda_admin_windows_v1';
+      const WINDOW_STORAGE_KEY = 'agenda_admin_windows_v2';
       let windowZ = 10;
 
       function loadWindowLayout() {
@@ -4491,7 +4491,7 @@
           card.style.transform = `translate(${saved.x || 0}px, ${saved.y || 0}px)`;
         }
         if (window.innerWidth >= 1024) {
-          if (Number.isFinite(saved.w) && saved.w > 200) card.style.width = saved.w + 'px';
+          if (Number.isFinite(saved.w) && saved.w >= 320) card.style.width = saved.w + 'px';
           if (Number.isFinite(saved.h) && saved.h > 120) card.style.height = saved.h + 'px';
         }
       }
@@ -4570,7 +4570,7 @@
               clearTimeout(timer);
               timer = setTimeout(() => {
                 const rect = card.getBoundingClientRect();
-                if (rect.width < 200 || rect.height < 120) return;
+                if (rect.width < 320 || rect.height < 160) return;
                 const current = loadWindowLayout();
                 current[card.dataset.winKey] = Object.assign({}, current[card.dataset.winKey], {
                   w: Math.round(rect.width),
