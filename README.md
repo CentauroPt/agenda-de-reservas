@@ -11,7 +11,10 @@ grupos escolares e painel de administração com horários, durações, localida
 ## Funcionalidades
 
 **Vista pública**
-- Calendário semanal (segunda a sexta) gerado a partir das horas de início e da duração de cada sessão.
+- **Calendário semanal estilo Google Calendar**: eventos posicionados pela hora e pela duração, com
+  sobreposições lado a lado, noite/dia por coluna e indicador do dia atual.
+- No painel de administração o calendário é editável: arrastar o bloco muda hora/dia, arrastar a base
+  redimensiona, duplo clique no vazio cria e duplo clique no bloco apaga.
 - Sessões coloridas por estado: disponível, reservada, passada e fora do período da campanha.
 - Navegação por semanas, botão "Hoje" e salto automático para a semana da campanha ao mudar de localidade.
 - Aviso de sessões sobrepostas e de sessões que terminam no dia seguinte.

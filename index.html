@@ -15,6 +15,26 @@
       display: grid;
       grid-template-columns: 60px repeat(7, minmax(130px, 1fr));
     }
+    .cal-event {
+      transition: box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .cal-event:hover {
+      filter: brightness(0.97);
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+    .cal-event.is-dragging {
+      opacity: 0.85;
+      z-index: 20;
+      cursor: grabbing;
+    }
+    .cal-resize {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 6px;
+      cursor: ns-resize;
+    }
     input:focus-visible,
     select:focus-visible,
     button:focus-visible,
@@ -65,27 +85,7 @@
       <div id="calendar-warning" aria-live="polite" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-4 py-2 rounded-xl"></div>
 
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto p-4">
-        <div class="min-w-[900px]">
-          <div class="calendar-grid mb-2">
-            <div></div>
-            <div class="col-span-5 bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <span class="bg-purple-900 px-1.5 py-0.5 rounded text-[10px]">PT</span>
-                <span id="week-location-title">--</span>
-              </div>
-              <span class="text-[10px] bg-purple-600 px-2 py-0.5 rounded text-purple-100 font-normal">Dados guardados neste navegador</span>
-            </div>
-            <div class="col-span-2 text-xs text-slate-400 font-semibold px-2 py-1 flex items-center justify-center">
-              Fim de Semana (Sem Atividade)
-            </div>
-          </div>
-
-          <div id="calendar-header-grid" class="calendar-grid border-b border-slate-200 pb-2 text-center">
-            <div class="text-[10px] font-bold text-slate-400 pt-3">HORA</div>
-          </div>
-
-          <div id="calendar-body-grid" class="calendar-grid pt-2"></div>
-        </div>
+        <div id="calendar-week" class="min-w-[900px]"></div>
       </div>
     </section>
 
@@ -189,6 +189,16 @@
           <button id="btn-reset-data" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md">
             🗑️ Limpar Dados Locais
           </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <h3 class="font-bold text-sm text-slate-800">📅 Calendário da semana</h3>
+          <p class="text-[11px] text-slate-500">Arraste um bloco para mudar de hora/dia · arraste a base para redimensionar · duplo clique no vazio para criar · duplo clique no bloco para apagar.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <div id="admin-calendar" class="min-w-[900px]"></div>
         </div>
       </div>
 
@@ -837,18 +847,392 @@
         return card;
       }
 
+      const HOUR_HEIGHT = 60;
+      const SNAP_MIN = 15;
+
+      function weekData() {
+        const days = getWeekDays(appData.currentWeekOffset);
+        const location = currentLocation();
+        const daySlots = {};
+        days.forEach((day) => {
+          daySlots[day.fullDate] = isWithinCampaign(day, location) ? slotsForDate(day.fullDate) : [];
+        });
+        return { days, location, daySlots };
+      }
+
+      function computeHourRange(daySlots) {
+        const all = Object.keys(daySlots).reduce((acc, key) => acc.concat(daySlots[key]), []);
+        let startHour = 8;
+        let endHour = 18;
+        if (all.length) {
+          startHour = Math.max(0, Math.floor(Math.min.apply(null, all.map((slot) => slot.startMin)) / 60));
+          endHour = Math.min(24, Math.ceil(Math.max.apply(null, all.map((slot) => slot.endMin)) / 60));
+        }
+        if (endHour - startHour < 4) endHour = Math.min(24, startHour + 4);
+        return { startHour, endHour };
+      }
+
+      function minutesToPx(minutes) {
+        return minutes * (HOUR_HEIGHT / 60);
+      }
+
+      function materializeDay(iso) {
+        if (!Array.isArray(appData.dateSlots[iso])) {
+          appData.dateSlots[iso] = slotsForDate(iso).map((slot) => ({ start: slot.startStr, end: slot.endStr }));
+        }
+        return appData.dateSlots[iso];
+      }
+
+      function createSlotAt(iso, minutes) {
+        const start = minutesToTime(Math.max(0, Math.min(23 * 60, minutes)));
+        const end = minutesToTime(Math.min(23 * 60 + 59, timeToMinutes(start) + 60));
+        const list = materializeDay(iso);
+        if (list.some((slot) => slot.start === start)) {
+          showToast('Já existe uma sessão a essa hora.', 'error');
+          return;
+        }
+        list.push({ start, end });
+        list.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+        saveState();
+        renderCalendar();
+        renderAdminOverrides();
+        showToast(`Sessão criada em ${formatHumanDate(iso)} às ${start}.`, 'success');
+      }
+
+      function removeSlotAt(iso, start) {
+        const key = bookingKeyFor(iso, start);
+        if (key && appData.bookings[key] && !confirm('Esta sessão tem uma reserva. Ao apagar, a reserva é eliminada. Continuar?')) return;
+        if (key) delete appData.bookings[key];
+        const list = materializeDay(iso);
+        const index = list.findIndex((slot) => slot.start === start);
+        if (index >= 0) list.splice(index, 1);
+        saveState();
+        renderCalendar();
+        renderAdminOverrides();
+        renderBookings();
+      }
+
+      function moveSlot(day, slot, deltaMin, dayOffset) {
+        const week = getWeekDays(appData.currentWeekOffset);
+        const currentIndex = week.findIndex((item) => item.fullDate === day.fullDate);
+        const targetIndex = Math.max(0, Math.min(week.length - 1, currentIndex + dayOffset));
+        const targetDate = week[targetIndex].fullDate;
+
+        if (targetIndex >= 5) {
+          showToast('As sessões só podem ficar em dias úteis.', 'error');
+          return;
+        }
+
+        const newStartMin = Math.max(0, Math.min(23 * 60, slot.startMin + deltaMin));
+        const duration = slot.endMin - slot.startMin;
+        const newStart = minutesToTime(newStartMin);
+        const newEnd = minutesToTime(newStartMin + duration);
+
+        if (targetDate === day.fullDate && newStart === slot.startStr) return;
+
+        const sourceKey = bookingKeyFor(day.fullDate, slot.startStr);
+        const booking = sourceKey ? appData.bookings[sourceKey] : null;
+
+        const sourceList = materializeDay(day.fullDate);
+        const sourceIndex = sourceList.findIndex((item) => item.start === slot.startStr);
+        if (sourceIndex < 0) return;
+
+        const targetList = targetDate === day.fullDate ? sourceList : materializeDay(targetDate);
+        if (targetList.some((item) => item.start === newStart && item !== sourceList[sourceIndex])) {
+          showToast('Já existe uma sessão a essa hora no destino.', 'error');
+          return;
+        }
+
+        const moved = sourceList.splice(sourceIndex, 1)[0];
+        moved.start = newStart;
+        moved.end = newEnd;
+        targetList.push(moved);
+        sourceList.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+        targetList.sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+
+        if (booking) {
+          delete appData.bookings[sourceKey];
+          const newKey = bookingKeyFor(targetDate, newStart);
+          appData.bookings[newKey] = Object.assign({}, booking, {
+            date: targetDate,
+            sessionStart: newStart,
+            sessionEnd: newEnd
+          });
+        }
+
+        saveState();
+        renderCalendar();
+        renderAdminOverrides();
+        renderBookings();
+      }
+
+      function resizeSlot(day, slot, deltaMin) {
+        const list = materializeDay(day.fullDate);
+        const item = list.find((entry) => entry.start === slot.startStr);
+        if (!item) return;
+        const newEndMin = Math.max(slot.startMin + 15, slot.endMin + deltaMin);
+        if (minutesToTime(newEndMin) === item.end) return;
+        item.end = minutesToTime(newEndMin);
+
+        const key = bookingKeyFor(day.fullDate, slot.startStr);
+        if (key && appData.bookings[key]) {
+          appData.bookings[key].sessionEnd = item.end;
+          appData.bookings[key].duration = newEndMin - slot.startMin;
+        }
+
+        saveState();
+        renderCalendar();
+        renderAdminOverrides();
+      }
+
+      function startBlockDrag(event, element, day, slot, startHour, editable) {
+        if (!editable || event.button !== 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        const startX = event.clientX;
+        const startY = event.clientY;
+        const rect = element.getBoundingClientRect();
+        const isResize = event.clientY > rect.bottom - 8;
+        const columnWidth = element.parentElement.getBoundingClientRect().width;
+        let moved = false;
+
+        element.classList.add('is-dragging');
+
+        const onMove = (ev) => {
+          const dy = ev.clientY - startY;
+          const dx = ev.clientX - startX;
+          if (Math.abs(dy) > 3 || Math.abs(dx) > 3) moved = true;
+          const deltaMin = Math.round((dy / HOUR_HEIGHT) * 60 / SNAP_MIN) * SNAP_MIN;
+
+          if (isResize) {
+            const height = Math.max(22, minutesToPx(slot.duration + deltaMin) - 2);
+            element.style.height = height + 'px';
+          } else {
+            element.style.top = minutesToPx(slot.startMin - startHour * 60 + deltaMin) + 'px';
+            element.style.transform = `translateX(${dx}px)`;
+          }
+        };
+
+        const onUp = (ev) => {
+          document.removeEventListener('pointermove', onMove);
+          document.removeEventListener('pointerup', onUp);
+          element.classList.remove('is-dragging');
+          element.style.transform = '';
+
+          if (!moved) {
+            renderCalendar();
+            return;
+          }
+
+          const dy = ev.clientY - startY;
+          const dx = ev.clientX - startX;
+          const deltaMin = Math.round((dy / HOUR_HEIGHT) * 60 / SNAP_MIN) * SNAP_MIN;
+
+          if (isResize) {
+            resizeSlot(day, slot, deltaMin);
+          } else {
+            const dayOffset = Math.round(dx / columnWidth);
+            moveSlot(day, slot, deltaMin, dayOffset);
+          }
+        };
+
+        document.addEventListener('pointermove', onMove);
+        document.addEventListener('pointerup', onUp);
+      }
+
+      function buildEventElement(day, slot, startHour, editable) {
+        const booked = appData.bookings[bookingKey(day, slot)];
+        const isPast = new Date(`${day.fullDate}T${slot.startStr}:00`).getTime() < Date.now();
+        const element = document.createElement('div');
+
+        element.dataset.slot = `${day.fullDate}T${slot.startStr}`;
+        element.dataset.date = day.fullDate;
+        element.dataset.start = slot.startStr;
+        element.dataset.end = slot.endStr;
+        element.style.top = minutesToPx(slot.startMin - startHour * 60) + 1 + 'px';
+        element.style.height = Math.max(22, minutesToPx(slot.duration) - 2) + 'px';
+
+        if (slot.colCount > 1) {
+          element.style.left = `calc(${(slot.colIndex * 100) / slot.colCount}% + 2px)`;
+          element.style.width = `calc(${100 / slot.colCount}% - 4px)`;
+          element.style.right = 'auto';
+        }
+
+        if (booked) {
+          element.dataset.state = 'booked';
+          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-300 bg-slate-200 text-slate-700 px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer select-none';
+          element.innerHTML = `
+            <div class="text-[10px] font-extrabold truncate">${escapeHtml(booked.schoolName || 'Reservado')}</div>
+            <div class="text-[9px] font-bold opacity-80">${slot.startStr} – ${slot.endStr}</div>
+          `;
+          element.onclick = () => showToast(`Reservado por ${booked.schoolName || 'escola'} · ${booked.students || 0} alunos`, 'success');
+        } else if (isPast) {
+          element.dataset.state = 'past';
+          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 px-1.5 py-1 overflow-hidden cursor-not-allowed select-none';
+          element.innerHTML = `
+            <div class="text-[10px] font-extrabold truncate">Sessão passada</div>
+            <div class="text-[9px] font-bold">${slot.startStr} – ${slot.endStr}</div>
+          `;
+        } else {
+          element.dataset.state = 'available';
+          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-sky-200 bg-sky-50 text-sky-900 px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer select-none hover:bg-sky-100';
+          element.innerHTML = `
+            <div class="text-[10px] font-extrabold truncate">${editable ? slot.startStr + ' – ' + slot.endStr : 'Reservar'}</div>
+            <div class="text-[9px] font-bold ${editable ? 'opacity-70' : 'text-sky-700'}">${editable ? (slot.duration + ' min') : slot.startStr + ' – ' + slot.endStr}</div>
+          `;
+          if (!editable) element.onclick = () => openBookingModal(day, slot);
+        }
+
+        if (editable) {
+          element.style.touchAction = 'none';
+          const handle = document.createElement('div');
+          handle.className = 'cal-resize';
+          element.appendChild(handle);
+          element.addEventListener('pointerdown', (event) => startBlockDrag(event, element, day, slot, startHour, true));
+          element.addEventListener('dblclick', (event) => {
+            event.stopPropagation();
+            if (booked) {
+              showToast('Esta sessão tem reserva; cancele a reserva no painel antes de apagar.', 'error');
+              return;
+            }
+            if (confirm(`Apagar a sessão das ${slot.startStr} de ${formatHumanDate(day.fullDate)}?`)) {
+              removeSlotAt(day.fullDate, slot.startStr);
+            }
+          });
+        }
+
+        return element;
+      }
+
+      function layoutSlotColumns(slots) {
+        const sorted = slots.slice().sort((a, b) => a.startMin - b.startMin || a.endMin - b.endMin);
+        const clusters = [];
+        let current = null;
+
+        sorted.forEach((slot) => {
+          if (!current || slot.startMin >= current.end) {
+            current = { end: slot.endMin, items: [] };
+            clusters.push(current);
+          }
+          current.items.push(slot);
+          current.end = Math.max(current.end, slot.endMin);
+        });
+
+        clusters.forEach((cluster) => {
+          const columns = [];
+          cluster.items.forEach((slot) => {
+            let placed = false;
+            for (let i = 0; i < columns.length; i++) {
+              const last = columns[i][columns[i].length - 1];
+              if (last.endMin <= slot.startMin) {
+                columns[i].push(slot);
+                slot.colIndex = i;
+                placed = true;
+                break;
+              }
+            }
+            if (!placed) {
+              slot.colIndex = columns.length;
+              columns.push([slot]);
+            }
+          });
+          cluster.items.forEach((slot) => { slot.colCount = columns.length; });
+        });
+
+        return sorted;
+      }
+
+      function renderWeekInto(container, editable) {
+        if (!container) return;
+        const data = weekData();
+        const days = data.days;
+        const location = data.location;
+        const daySlots = data.daySlots;
+        const range = computeHourRange(daySlots);
+        const startHour = range.startHour;
+        const endHour = range.endHour;
+        const totalHeight = minutesToPx((endHour - startHour) * 60);
+
+        container.innerHTML = '';
+
+        const header = document.createElement('div');
+        header.className = 'flex border-b border-slate-200';
+        const corner = document.createElement('div');
+        corner.className = 'w-[56px] shrink-0';
+        header.appendChild(corner);
+
+        days.forEach((day) => {
+          const cell = document.createElement('div');
+          const inCampaign = isWithinCampaign(day, location);
+          cell.className = 'flex-1 text-center py-2 border-l border-slate-100';
+          const isToday = day.fullDate === todayISO();
+          cell.innerHTML = `
+            <div class="text-[10px] font-bold ${day.isWeekend || !inCampaign ? 'text-slate-300' : 'text-slate-500'}">${day.name}</div>
+            <div class="text-lg font-extrabold ${!inCampaign || day.isWeekend ? 'text-slate-300' : (isToday ? 'text-indigo-600' : 'text-slate-900')}">${day.dateNumber}</div>
+          `;
+          header.appendChild(cell);
+        });
+        container.appendChild(header);
+
+        const body = document.createElement('div');
+        body.className = 'flex';
+
+        const timeColumn = document.createElement('div');
+        timeColumn.className = 'w-[56px] shrink-0 relative';
+        timeColumn.style.height = totalHeight + 'px';
+        for (let hour = startHour; hour <= endHour; hour++) {
+          const label = document.createElement('div');
+          label.className = 'absolute right-2 text-[10px] font-bold text-slate-400';
+          label.style.top = minutesToPx((hour - startHour) * 60) - 6 + 'px';
+          label.textContent = pad(hour) + ':00';
+          timeColumn.appendChild(label);
+        }
+        body.appendChild(timeColumn);
+
+        days.forEach((day) => {
+          const column = document.createElement('div');
+          column.className = 'flex-1 relative border-l border-slate-100' + (day.isWeekend ? ' bg-slate-50/60' : '');
+          column.style.height = totalHeight + 'px';
+          column.dataset.date = day.fullDate;
+
+          for (let hour = startHour; hour <= endHour; hour++) {
+            const line = document.createElement('div');
+            line.className = 'absolute left-0 right-0 border-t border-slate-100 pointer-events-none';
+            line.style.top = minutesToPx((hour - startHour) * 60) + 'px';
+            column.appendChild(line);
+          }
+
+          layoutSlotColumns(daySlots[day.fullDate]).forEach((slot) => {
+            column.appendChild(buildEventElement(day, slot, startHour, editable));
+          });
+
+          if (editable && !day.isWeekend && isWithinCampaign(day, location)) {
+            column.addEventListener('dblclick', (event) => {
+              if (event.target !== column) return;
+              const rect = column.getBoundingClientRect();
+              const rawMinutes = startHour * 60 + ((event.clientY - rect.top) / HOUR_HEIGHT) * 60;
+              const snapped = Math.round(rawMinutes / SNAP_MIN) * SNAP_MIN;
+              createSlotAt(day.fullDate, snapped);
+            });
+          }
+
+          body.appendChild(column);
+        });
+
+        container.appendChild(body);
+      }
+
       function renderCalendar() {
         const days = getWeekDays(appData.currentWeekOffset);
-        const headerGrid = document.getElementById('calendar-header-grid');
-        const bodyGrid = document.getElementById('calendar-body-grid');
         const label = document.getElementById('current-week-label');
         const locationTitle = document.getElementById('week-location-title');
         const rangeLabel = document.getElementById('campaign-range-label');
         const banner = document.getElementById('calendar-warning');
         const location = currentLocation();
 
-        label.textContent = `${formatHumanDate(days[0].fullDate)} → ${formatHumanDate(days[6].fullDate)}`;
-        locationTitle.textContent = location ? location.name : 'Sem campanha';
+        if (label) label.textContent = `${formatHumanDate(days[0].fullDate)} → ${formatHumanDate(days[6].fullDate)}`;
+        if (locationTitle) locationTitle.textContent = location ? location.name : 'Sem campanha';
 
         if (rangeLabel) {
           if (hasValidRange(location)) {
@@ -860,18 +1244,14 @@
           }
         }
 
-        const daySlots = {};
-        days.forEach((day) => {
-          daySlots[day.fullDate] = isWithinCampaign(day, location) ? slotsForDate(day.fullDate) : [];
-        });
-
-        const weekSlots = days.reduce((all, day) => all.concat(daySlots[day.fullDate]), []);
+        const data = weekData();
+        const weekSlots = days.reduce((all, day) => all.concat(data.daySlots[day.fullDate]), []);
         const weekHasCampaignDay = !location || !hasValidRange(location) || days.some((day) => !day.isWeekend && isWithinCampaign(day, location));
 
         let overlap = '';
         days.forEach((day) => {
           if (overlap) return;
-          const list = daySlots[day.fullDate];
+          const list = data.daySlots[day.fullDate];
           for (let i = 0; i < list.length && !overlap; i++) {
             for (let j = i + 1; j < list.length; j++) {
               if (list[i].startMin < list[j].endMin && list[j].startMin < list[i].endMin) {
@@ -884,69 +1264,15 @@
 
         const overnight = weekSlots.filter((slot) => slot.overnight).map((slot) => slot.startStr);
 
-        if (overlap) {
-          setBanner(banner, `⚠️ ${overlap}`, 'warn');
-        } else if (overnight.length) {
-          setBanner(banner, `⚠️ Sessão termina no dia seguinte: ${overnight.join(', ')}.`, 'warn');
-        } else if (!weekHasCampaignDay) {
-          setBanner(banner, `Sem sessões nesta semana: a campanha decorre de ${formatHumanDate(location.startDate)} a ${formatHumanDate(location.endDate)}.`, 'info');
-        } else if (!weekSlots.length) {
-          setBanner(banner, 'Não há sessões nesta semana. Defina horários no Painel de Administrador.', 'info');
-        } else if (location && !hasValidRange(location)) {
-          setBanner(banner, 'Defina as datas de início e de fim desta campanha no Painel de Administrador.', 'info');
-        } else {
-          setBanner(banner, '', 'info');
-        }
+        if (overlap) setBanner(banner, `⚠️ ${overlap}`, 'warn');
+        else if (overnight.length) setBanner(banner, `⚠️ Sessão termina no dia seguinte: ${overnight.join(', ')}.`, 'warn');
+        else if (!weekHasCampaignDay) setBanner(banner, `Sem sessões nesta semana: a campanha decorre de ${formatHumanDate(location.startDate)} a ${formatHumanDate(location.endDate)}.`, 'info');
+        else if (!weekSlots.length) setBanner(banner, 'Não há sessões nesta semana. Defina horários no Painel de Administrador.', 'info');
+        else if (location && !hasValidRange(location)) setBanner(banner, 'Defina as datas de início e de fim desta campanha no Painel de Administrador.', 'info');
+        else setBanner(banner, '', 'info');
 
-        headerGrid.innerHTML = '<div class="text-[10px] font-bold text-slate-400 pt-3">HORA</div>';
-        days.forEach((day) => {
-          const column = document.createElement('div');
-          column.className = `text-center py-1 ${day.isWeekend ? 'opacity-60' : ''}`;
-
-          const nameDiv = document.createElement('div');
-          nameDiv.className = `text-[10px] font-bold ${day.isWeekend ? 'text-slate-300' : 'text-slate-500'}`;
-          nameDiv.textContent = day.name;
-
-          const dateDiv = document.createElement('div');
-          const isToday = day.fullDate === todayISO();
-          const inCampaign = isWithinCampaign(day, location);
-          dateDiv.className = `text-lg font-extrabold ${!inCampaign || day.isWeekend ? 'text-slate-300' : 'text-slate-900'} ${isToday ? 'text-indigo-600' : ''}`;
-          dateDiv.textContent = day.dateNumber;
-
-          column.appendChild(nameDiv);
-          column.appendChild(dateDiv);
-          headerGrid.appendChild(column);
-        });
-
-        bodyGrid.innerHTML = '';
-
-        if (!weekSlots.length) {
-          bodyGrid.innerHTML = '<div class="col-span-8 text-center text-xs font-semibold text-slate-400 py-12">Nenhuma sessão nesta semana.</div>';
-          return;
-        }
-
-        const now = new Date();
-        const startHour = Math.max(0, Math.floor(Math.min(...weekSlots.map((slot) => slot.startMin)) / 60));
-        const endHour = Math.min(23, Math.floor(Math.max(...weekSlots.map((slot) => slot.startMin)) / 60));
-
-        for (let hour = startHour; hour <= endHour; hour++) {
-          const timeCol = document.createElement('div');
-          timeCol.className = 'text-[10px] font-bold text-slate-400 py-4 border-t border-slate-100';
-          timeCol.textContent = `${pad(hour)}:00`;
-          bodyGrid.appendChild(timeCol);
-
-          days.forEach((day) => {
-            const cell = document.createElement('div');
-            cell.className = `border-t border-slate-100 p-1 min-h-[64px]${day.isWeekend ? ' bg-slate-50/60' : ''}`;
-
-            if (!day.isWeekend) {
-              const matches = daySlots[day.fullDate].filter((slot) => Math.floor(slot.startMin / 60) === hour);
-              matches.forEach((slot) => cell.appendChild(buildSessionCard(day, slot, location, now)));
-            }
-
-            bodyGrid.appendChild(cell);
-          });
-        }
+        renderWeekInto(document.getElementById('calendar-week'), false);
+        renderWeekInto(document.getElementById('admin-calendar'), true);
       }
 
       function renderLocationSelect() {
@@ -1502,6 +1828,7 @@
         renderAdminOverrides();
         renderAdminLocations();
         renderBookings();
+        renderCalendar();
       };
 
       document.getElementById('btn-prev-week').onclick = () => { appData.currentWeekOffset--; renderCalendar(); };
