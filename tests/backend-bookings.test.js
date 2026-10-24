@@ -57,7 +57,9 @@ const base = {
 
   const denied = makeResponse();
   await bookings({ method: 'GET', headers: {} }, denied);
-  assert.strictEqual(denied.statusCode, 401, 'listar sem token devolve 401');
+  assert.strictEqual(denied.statusCode, 200, 'listar sem token devolve lista publica');
+  assert.strictEqual(denied.body.bookings.length, 1, 'lista publica tem a reserva');
+  assert.strictEqual(denied.body.bookings[0].email, undefined, 'lista publica nao expoe dados pessoais');
 
   const listed = makeResponse();
   await bookings({ method: 'GET', headers: { 'x-admin-token': 'segredo' } }, listed);
@@ -77,7 +79,7 @@ const base = {
 
   console.log(JSON.stringify({
     ok: true,
-    checks: ['201 criar', '409 duplicado', '400 invalido', '401 sem token', '200 listar', '404 token errado', '200 cancelar', 'lista vazia']
+    checks: ['201 criar', '409 duplicado', '400 invalido', '200 lista publica sem dados pessoais', '200 listar com token', '404 token errado', '200 cancelar', 'lista vazia']
   }, null, 2));
 })().catch((error) => {
   console.error('FALHOU:', error.message);
