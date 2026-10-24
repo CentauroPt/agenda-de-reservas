@@ -46,6 +46,9 @@ Servidor de pré-visualização com **auto-reload** (recarrega a página aberta 
 python tools/preview.py          # http://127.0.0.1:8080
 ```
 
+Sem terminal: duplo clique em `tools\abrir-preview.cmd` — arranca o servidor se for preciso e abre o
+browser já no endereço certo.
+
 Expõe apenas `index.html` e `docs/`; o resto do repositório (`.git`, README, etc.) devolve 404.
 
 ### Publicar no GitHub Pages (ativo — sem build, sem custos)
