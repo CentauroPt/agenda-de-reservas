@@ -1641,7 +1641,7 @@
 
         if (booked) {
           element.dataset.state = 'booked';
-          element.style.opacity = editable ? '' : '0.55';
+          element.style.opacity = editable ? '' : '0.75';
 
           if (editable) {
             element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-300 bg-slate-200 text-slate-700 px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer select-none';
@@ -1651,7 +1651,7 @@
             `;
             element.onclick = () => showToast(`Reservado por ${booked.schoolName || 'escola'} · ${booked.students || 0} alunos`, 'success');
           } else {
-            element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-dashed border-slate-300 bg-slate-100 text-slate-400 px-1.5 py-1 overflow-hidden select-none cursor-not-allowed';
+            element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-dashed border-slate-400 bg-slate-100 text-slate-600 px-1.5 py-1 overflow-hidden select-none cursor-not-allowed';
             element.innerHTML = `
               <div class="text-[10px] font-extrabold truncate">🔒 Reservado</div>
               <div class="text-[9px] font-bold">${slot.startStr} – ${slot.endStr}</div>
@@ -1661,8 +1661,8 @@
           }
         } else if (isPast) {
           element.dataset.state = 'past';
-          element.style.opacity = '0.5';
-          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-slate-400 px-1.5 py-1 overflow-hidden select-none cursor-not-allowed';
+          element.style.opacity = '0.65';
+          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-dashed border-slate-300 bg-slate-50 text-slate-500 px-1.5 py-1 overflow-hidden select-none cursor-not-allowed';
           element.innerHTML = `
             <div class="text-[10px] font-extrabold truncate">⏳ Sessão passada</div>
             <div class="text-[9px] font-bold line-through">${slot.startStr} – ${slot.endStr}</div>
