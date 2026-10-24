@@ -27,6 +27,8 @@ grupos escolares e painel de administração com horários, durações, localida
 - **Ajustes por data**: cada dia pode ter os seus próprios horários (09:00–10:15, 10:15–11:30, …), com
   adicionar/remover por dia; o calendário mostra exatamente o que está definido em cada data.
 - **Copiar horário** de um dia para todos os dias úteis de um intervalo.
+- **Fins de semana sob exceção**: o botão "Ativar sábado e domingo desta semana" cria sessões nesses
+  dias (ou basta adicionar um ajuste na data); enquanto não estiverem ativos ficam esbatidos.
 - Campanhas (localidades) com data de início e de fim; o calendário bloqueia datas fora do intervalo.
 - Reservas registadas: listagem, contagem de alunos, cancelamento individual e **exportação CSV**
   (separador `;` e BOM, pronta para Excel).

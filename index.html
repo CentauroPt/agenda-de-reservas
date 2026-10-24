@@ -255,6 +255,7 @@
               <input type="date" id="admin-override-date" class="flex-grow p-2 border rounded-lg text-xs font-bold">
               <button type="button" id="btn-add-override" class="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg whitespace-nowrap">Adicionar dia</button>
             </div>
+            <button type="button" id="btn-enable-weekend" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg">🗓️ Ativar sábado e domingo desta semana</button>
             <div id="admin-override-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1"></div>
           </div>
 
@@ -1020,11 +1021,6 @@
         const targetIndex = Math.max(0, Math.min(week.length - 1, currentIndex + dayOffset));
         const targetDate = week[targetIndex].fullDate;
 
-        if (targetIndex >= 5) {
-          showToast('As sessões só podem ficar em dias úteis.', 'error');
-          return;
-        }
-
         const newStartMin = Math.max(0, Math.min(23 * 60, slot.startMin + deltaMin));
         const duration = slot.endMin - slot.startMin;
         const newStart = minutesToTime(newStartMin);
@@ -1267,11 +1263,13 @@
         days.forEach((day) => {
           const cell = document.createElement('div');
           const inCampaign = isWithinCampaign(day, location);
+          const hasSlots = daySlots[day.fullDate].length > 0;
+          const muted = !inCampaign || (day.isWeekend && !hasSlots);
           cell.className = 'flex-1 text-center py-2 border-l border-slate-100';
           const isToday = day.fullDate === todayISO();
           cell.innerHTML = `
-            <div class="text-[10px] font-bold ${day.isWeekend || !inCampaign ? 'text-slate-300' : 'text-slate-500'}">${day.name}</div>
-            <div class="text-lg font-extrabold ${!inCampaign || day.isWeekend ? 'text-slate-300' : (isToday ? 'text-indigo-600' : 'text-slate-900')}">${day.dateNumber}</div>
+            <div class="text-[10px] font-bold ${muted ? 'text-slate-300' : 'text-slate-500'}">${day.name}</div>
+            <div class="text-lg font-extrabold ${muted ? 'text-slate-300' : (isToday ? 'text-indigo-600' : 'text-slate-900')}">${day.dateNumber}</div>
           `;
           header.appendChild(cell);
         });
@@ -1294,7 +1292,7 @@
 
         days.forEach((day) => {
           const column = document.createElement('div');
-          column.className = 'flex-1 relative border-l border-slate-100' + (day.isWeekend ? ' bg-slate-50/60' : '');
+          column.className = 'flex-1 relative border-l border-slate-100' + (day.isWeekend && daySlots[day.fullDate].length === 0 ? ' bg-slate-50/60' : '');
           column.style.height = totalHeight + 'px';
           column.dataset.date = day.fullDate;
 
@@ -1309,7 +1307,7 @@
             column.appendChild(buildEventElement(day, slot, startHour, editable));
           });
 
-          if (editable && !day.isWeekend && isWithinCampaign(day, location)) {
+          if (editable && isWithinCampaign(day, location)) {
             column.addEventListener('dblclick', (event) => {
               if (event.target !== column) return;
               const rect = column.getBoundingClientRect();
@@ -1348,7 +1346,7 @@
 
         const data = weekData();
         const weekSlots = days.reduce((all, day) => all.concat(data.daySlots[day.fullDate]), []);
-        const weekHasCampaignDay = !location || !hasValidRange(location) || days.some((day) => !day.isWeekend && isWithinCampaign(day, location));
+        const weekHasCampaignDay = !location || !hasValidRange(location) || days.some((day) => isWithinCampaign(day, location));
 
         let overlap = '';
         days.forEach((day) => {
@@ -2292,6 +2290,31 @@
         }
         dates.forEach((date) => container.appendChild(buildOverrideCard(date)));
       }
+
+      function enableWeekend() {
+        const days = getWeekDays(appData.currentWeekOffset);
+        const base = (appData.weeklySlots['1'] && appData.weeklySlots['1'].length ? appData.weeklySlots['1'] : DEFAULT_WEEKLY_SLOTS);
+        const targets = [days[5], days[6]];
+        let created = 0;
+
+        targets.forEach((day) => {
+          if (Array.isArray(appData.dateSlots[day.fullDate])) return;
+          appData.dateSlots[day.fullDate] = base.map((slot) => ({ start: slot.start, end: slot.end }));
+          created++;
+        });
+
+        if (!created) {
+          showToast('O fim de semana desta semana já está ativo.', 'info');
+          return;
+        }
+
+        saveState();
+        renderAdminOverrides();
+        renderCalendar();
+        showToast(`Fim de semana ativado (${created} dia(s)) — podes ajustar os horários acima.`, 'success');
+      }
+
+      document.getElementById('btn-enable-weekend').onclick = enableWeekend;
 
       document.getElementById('btn-add-override').onclick = () => {
         const input = document.getElementById('admin-override-date');
