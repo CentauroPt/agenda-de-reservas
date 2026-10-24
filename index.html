@@ -15,6 +15,9 @@
       display: grid;
       grid-template-columns: 60px repeat(7, minmax(130px, 1fr));
     }
+    .campaign-banner {
+      background-color: var(--banner-bg, #6d28d9);
+    }
     .admin-window {
       resize: both;
       overflow: auto;
@@ -376,6 +379,55 @@
 
       <div id="admin-google-view" class="hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🎨 Aparência</h2>
+            <p class="text-xs text-slate-500 mt-1">Cor dos banners de campanha e tipografia de toda a aplicação. As alterações aplicam-se de imediato e ficam guardadas neste navegador.</p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label for="appearance-banner-color" class="block text-[11px] font-bold text-slate-700">Cor dos banners</label>
+              <div class="flex items-center gap-2">
+                <input type="color" id="appearance-banner-color" class="h-10 w-14 p-1 border rounded-lg bg-white cursor-pointer">
+                <span id="appearance-banner-color-label" class="text-xs font-mono text-slate-500">#6d28d9</span>
+              </div>
+              <div id="appearance-swatches" class="flex flex-wrap gap-1.5"></div>
+            </div>
+
+            <div class="space-y-2">
+              <label for="appearance-font" class="block text-[11px] font-bold text-slate-700">Fonte</label>
+              <select id="appearance-font" class="w-full p-2 border rounded-lg text-xs font-bold bg-white"></select>
+              <p class="text-[10px] text-slate-400">As fontes marcadas com “Google” são descarregadas quando escolhidas.</p>
+            </div>
+
+            <div class="space-y-2">
+              <label for="appearance-size" class="block text-[11px] font-bold text-slate-700">Tamanho da letra</label>
+              <div class="flex items-center gap-2">
+                <select id="appearance-size" class="flex-1 p-2 border rounded-lg text-xs font-bold bg-white"></select>
+                <span id="appearance-size-label" class="text-xs font-mono text-slate-500">16 px</span>
+              </div>
+              <input type="range" id="appearance-size-range" min="10" max="26" step="1" value="16" class="w-full accent-indigo-600">
+            </div>
+
+            <div class="space-y-2">
+              <p class="block text-[11px] font-bold text-slate-700">Pré-visualização</p>
+              <div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                <div class="campaign-banner h-7 rounded-lg text-white px-2 flex items-center overflow-hidden shadow-sm">
+                  <span id="appearance-preview-text" class="text-[10px] font-bold truncate">71.Torres Vedras · 5 dias</span>
+                </div>
+                <p id="appearance-preview-body" class="text-xs text-slate-600">Texto de exemplo para veres a fonte e o tamanho.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-apply-appearance" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-sm">Aplicar</button>
+            <button id="btn-reset-appearance" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">Repor aparência</button>
+          </div>
+          <div id="appearance-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Aparência por omissão.</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div class="flex items-start justify-between gap-4">
             <div>
               <h2 class="text-lg font-bold text-slate-900">🔗 Ligação ao Google Calendar</h2>
@@ -523,6 +575,7 @@
         weeklySlots: defaultWeeklySlots(),
         dateSlots: {},
         google: { clientId: '', apiKey: '', calendarId: 'primary' },
+        appearance: { bannerColor: '#6d28d9', fontFamily: '__system', fontSize: 16 },
         bookings: {},
         currentWeekOffset: 0,
         selectedSession: null
@@ -619,6 +672,13 @@
           appData.bookings = migrateBookings(parsed.bookings, appData.locations);
           appData.dateSlots = normalizeDateSlots(parsed.dateSlots);
 
+          const appearance = parsed.appearance && typeof parsed.appearance === 'object' ? parsed.appearance : {};
+          appData.appearance = {
+            bannerColor: typeof appearance.bannerColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(appearance.bannerColor) ? appearance.bannerColor : '#6d28d9',
+            fontFamily: typeof appearance.fontFamily === 'string' && appearance.fontFamily ? appearance.fontFamily : '__system',
+            fontSize: Number.isFinite(Number(appearance.fontSize)) ? Math.min(26, Math.max(10, Number(appearance.fontSize))) : 16
+          };
+
           const google = parsed.google && typeof parsed.google === 'object' ? parsed.google : {};
           appData.google = {
             clientId: typeof google.clientId === 'string' ? google.clientId : '',
@@ -641,6 +701,7 @@
             weeklySlots: appData.weeklySlots,
             dateSlots: appData.dateSlots,
             google: appData.google,
+            appearance: appData.appearance,
             bookings: appData.bookings
           }));
         } catch (error) {
@@ -1285,7 +1346,7 @@
 
           const bar = document.createElement('div');
           bar.className = inCampaign
-            ? 'h-7 rounded-lg bg-purple-700 text-white px-2 flex items-center overflow-hidden shadow-sm'
+            ? 'campaign-banner h-7 rounded-lg text-white px-2 flex items-center overflow-hidden shadow-sm'
             : 'h-7 rounded-lg border border-dashed border-slate-200 text-slate-400 px-2 flex items-center justify-center overflow-hidden';
           bar.title = inCampaign
             ? `${location ? location.name : 'Campanha'}: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)} (${span} dia${span > 1 ? 's' : ''})`
@@ -2572,6 +2633,193 @@
         showToast('Dados locais apagados.', 'success');
       };
 
+      /* ---------- aparencia ---------- */
+
+      const FONT_OPTIONS = [
+        { value: '__system', label: 'Sistema (padrão)' },
+        { value: 'Arial, Helvetica, sans-serif', label: 'Arial' },
+        { value: 'Verdana, Geneva, sans-serif', label: 'Verdana' },
+        { value: 'Tahoma, Geneva, sans-serif', label: 'Tahoma' },
+        { value: "'Trebuchet MS', Helvetica, sans-serif", label: 'Trebuchet MS' },
+        { value: "'Segoe UI', system-ui, sans-serif", label: 'Segoe UI' },
+        { value: 'Calibri, Candara, sans-serif', label: 'Calibri' },
+        { value: 'Candara, Calibri, sans-serif', label: 'Candara' },
+        { value: 'Optima, Segoe, sans-serif', label: 'Optima' },
+        { value: 'Georgia, serif', label: 'Georgia' },
+        { value: "'Times New Roman', Times, serif", label: 'Times New Roman' },
+        { value: 'Cambria, Georgia, serif', label: 'Cambria' },
+        { value: 'Garamond, Baskerville, serif', label: 'Garamond' },
+        { value: 'Palatino, "Book Antiqua", serif', label: 'Palatino' },
+        { value: 'Baskerville, Georgia, serif', label: 'Baskerville' },
+        { value: "'Courier New', Courier, monospace", label: 'Courier New' },
+        { value: 'Consolas, Monaco, monospace', label: 'Consolas' },
+        { value: 'Monaco, Consolas, monospace', label: 'Monaco' },
+        { value: "'Lucida Console', Monaco, monospace", label: 'Lucida Console' },
+        { value: "'Comic Sans MS', cursive", label: 'Comic Sans MS' },
+        { value: 'Impact, Charcoal, sans-serif', label: 'Impact' },
+        { value: 'Lato, sans-serif', label: 'Lato (Google)', google: 'Lato:wght@400;700' },
+        { value: 'Roboto, sans-serif', label: 'Roboto (Google)', google: 'Roboto:wght@400;700' },
+        { value: "'Open Sans', sans-serif", label: 'Open Sans (Google)', google: 'Open+Sans:wght@400;700' },
+        { value: 'Montserrat, sans-serif', label: 'Montserrat (Google)', google: 'Montserrat:wght@400;700' },
+        { value: 'Poppins, sans-serif', label: 'Poppins (Google)', google: 'Poppins:wght@400;700' },
+        { value: 'Nunito, sans-serif', label: 'Nunito (Google)', google: 'Nunito:wght@400;700' },
+        { value: "'Work Sans', sans-serif", label: 'Work Sans (Google)', google: 'Work+Sans:wght@400;700' },
+        { value: "'DM Sans', sans-serif", label: 'DM Sans (Google)', google: 'DM+Sans:wght@400;700' },
+        { value: 'Raleway, sans-serif', label: 'Raleway (Google)', google: 'Raleway:wght@400;700' },
+        { value: 'Merriweather, serif', label: 'Merriweather (Google)', google: 'Merriweather:wght@400;700' },
+        { value: "'Playfair Display', serif", label: 'Playfair Display (Google)', google: 'Playfair+Display:wght@400;700' },
+        { value: "'Roboto Mono', monospace", label: 'Roboto Mono (Google)', google: 'Roboto+Mono:wght@400;700' }
+      ];
+
+      const BANNER_COLORS = ['#6d28d9', '#4f46e5', '#1d4ed8', '#0891b2', '#0f766e', '#15803d', '#b45309', '#c2410c', '#be123c', '#334155'];
+
+      const loadedFonts = {};
+
+      function fontOption(value) {
+        return FONT_OPTIONS.find((option) => option.value === value) || FONT_OPTIONS[0];
+      }
+
+      function ensureFontLoaded(option) {
+        if (!option || !option.google || loadedFonts[option.google]) return;
+        loadedFonts[option.google] = true;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${option.google}&display=swap`;
+        document.head.appendChild(link);
+      }
+
+      function applyAppearance() {
+        const appearance = appData.appearance || {};
+        const color = appearance.bannerColor || '#6d28d9';
+        const option = fontOption(appearance.fontFamily || '__system');
+        const size = Math.min(26, Math.max(10, Number(appearance.fontSize) || 16));
+
+        document.documentElement.style.setProperty('--banner-bg', color);
+        document.documentElement.style.fontSize = size + 'px';
+
+        if (option.value === '__system') {
+          document.body.style.fontFamily = '';
+        } else {
+          ensureFontLoaded(option);
+          document.body.style.fontFamily = option.value;
+        }
+
+        const previewText = document.getElementById('appearance-preview-text');
+        if (previewText) previewText.style.fontFamily = option.value === '__system' ? '' : option.value;
+      }
+
+      function renderAppearanceControls() {
+        const colorInput = document.getElementById('appearance-banner-color');
+        const colorLabel = document.getElementById('appearance-banner-color-label');
+        const fontSelect = document.getElementById('appearance-font');
+        const sizeSelect = document.getElementById('appearance-size');
+        const sizeRange = document.getElementById('appearance-size-range');
+        const sizeLabel = document.getElementById('appearance-size-label');
+        const swatches = document.getElementById('appearance-swatches');
+        if (!colorInput || !fontSelect) return;
+
+        const appearance = appData.appearance;
+
+        colorInput.value = appearance.bannerColor;
+        if (colorLabel) colorLabel.textContent = appearance.bannerColor;
+
+        if (!swatches.children.length) {
+          BANNER_COLORS.forEach((color) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'w-6 h-6 rounded-full border border-white shadow';
+            button.style.backgroundColor = color;
+            button.title = color;
+            button.setAttribute('aria-label', `Cor ${color}`);
+            button.onclick = () => {
+              appData.appearance.bannerColor = color;
+              saveState();
+              renderAppearanceControls();
+              applyAppearance();
+              setAppearanceStatus('Cor aplicada aos banners.', 'ok');
+            };
+            swatches.appendChild(button);
+          });
+        }
+
+        if (!fontSelect.options.length) {
+          FONT_OPTIONS.forEach((option) => {
+            const item = document.createElement('option');
+            item.value = option.value;
+            item.textContent = option.label;
+            item.style.fontFamily = option.value === '__system' ? '' : option.value;
+            fontSelect.appendChild(item);
+          });
+        }
+        fontSelect.value = appearance.fontFamily;
+
+        if (!sizeSelect.options.length) {
+          for (let size = 10; size <= 26; size++) {
+            const item = document.createElement('option');
+            item.value = String(size);
+            item.textContent = `${size} px`;
+            sizeSelect.appendChild(item);
+          }
+        }
+        sizeSelect.value = String(appearance.fontSize);
+        if (sizeRange) sizeRange.value = String(appearance.fontSize);
+        if (sizeLabel) sizeLabel.textContent = `${appearance.fontSize} px`;
+      }
+
+      function setAppearanceStatus(message, tone) {
+        const element = document.getElementById('appearance-status');
+        if (!element) return;
+        const tones = {
+          ok: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+          info: 'bg-slate-50 border-slate-200 text-slate-600'
+        };
+        element.className = `text-xs font-semibold border rounded-xl px-3 py-2 ${tones[tone] || tones.info}`;
+        element.textContent = message;
+      }
+
+      function readAppearanceInputs() {
+        const colorInput = document.getElementById('appearance-banner-color');
+        const fontSelect = document.getElementById('appearance-font');
+        const sizeSelect = document.getElementById('appearance-size');
+        appData.appearance = {
+          bannerColor: colorInput.value || '#6d28d9',
+          fontFamily: fontSelect.value || '__system',
+          fontSize: Math.min(26, Math.max(10, parseInt(sizeSelect.value, 10) || 16))
+        };
+      }
+
+      function previewAppearance() {
+        readAppearanceInputs();
+        renderAppearanceControls();
+        applyAppearance();
+      }
+
+      document.getElementById('appearance-banner-color').oninput = previewAppearance;
+      document.getElementById('appearance-font').onchange = previewAppearance;
+      document.getElementById('appearance-size').onchange = previewAppearance;
+      document.getElementById('appearance-size-range').oninput = (event) => {
+        const sizeSelect = document.getElementById('appearance-size');
+        sizeSelect.value = String(Math.min(26, Math.max(10, Number(event.target.value))));
+        previewAppearance();
+      };
+
+      document.getElementById('btn-apply-appearance').onclick = () => {
+        readAppearanceInputs();
+        saveState();
+        applyAppearance();
+        renderAppearanceControls();
+        setAppearanceStatus('Aparência guardada e aplicada.', 'ok');
+        showToast('Aparência aplicada.', 'success');
+      };
+
+      document.getElementById('btn-reset-appearance').onclick = () => {
+        appData.appearance = { bannerColor: '#6d28d9', fontFamily: '__system', fontSize: 16 };
+        saveState();
+        applyAppearance();
+        renderAppearanceControls();
+        setAppearanceStatus('Aparência reposta.', 'info');
+      };
+
       /* ---------- Google Calendar ---------- */
 
       const GOOGLE_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
@@ -3014,6 +3262,8 @@
       renderBookings();
       fillGoogleUi();
       renderGoogleConnection();
+      renderAppearanceControls();
+      applyAppearance();
       initAdminWindows();
       jumpToLocationStart(currentLocation());
       renderCalendar();

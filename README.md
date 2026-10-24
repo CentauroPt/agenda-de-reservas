@@ -169,6 +169,18 @@ As chaves de reserva passaram a usar o `id` da campanha (e não o nome), para qu
 localidade não perca reservas. Dados de versões anteriores, guardados por nome, são migrados
 automaticamente na primeira abertura.
 
+## Aparência
+
+Na sub-página **Google Calendar** existe o bloco **🎨 Aparência**, que permite:
+
+- **cor dos banners de campanha** (10 tons predefinidos ou seletor livre);
+- **fonte** entre 33 opções (sistema, Arial, Verdana, Georgia, Cambria, Courier, Comic Sans, Impact…
+  e 12 Google Fonts descarregadas só quando escolhidas);
+- **tamanho da letra** de 10 a 26 px (lista + slider), aplicado à raiz da página para escalar toda a
+  tipografia.
+
+As escolhas são guardadas no `localStorage` e há **Repor aparência** para voltar ao original.
+
 ## Ligação ao Google Calendar (opcional)
 
 No painel de administração existe a sub-página **Google Calendar**, com os campos necessários:
