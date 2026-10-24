@@ -11,6 +11,8 @@ grupos escolares e painel de administração com horários, durações, localida
 ## Funcionalidades
 
 **Vista pública**
+- **Banner da campanha** por cima dos dias que pertencem ao intervalo da localidade (2 dias, 3 dias, …),
+  com os restantes marcados como "Fora da campanha".
 - **Calendário semanal estilo Google Calendar**: eventos posicionados pela hora e pela duração, com
   sobreposições lado a lado, noite/dia por coluna e indicador do dia atual.
 - No painel de administração o calendário é editável: arrastar o bloco muda hora/dia, arrastar a base

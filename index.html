@@ -1264,6 +1264,50 @@
         return sorted;
       }
 
+      function buildCampaignBanner(days, location) {
+        const row = document.createElement('div');
+        row.className = 'flex items-stretch mb-1';
+
+        const spacer = document.createElement('div');
+        spacer.className = 'w-[56px] shrink-0';
+        row.appendChild(spacer);
+
+        let index = 0;
+        while (index < days.length) {
+          const inCampaign = isWithinCampaign(days[index], location);
+          let end = index;
+          while (end + 1 < days.length && isWithinCampaign(days[end + 1], location) === inCampaign) end++;
+
+          const span = end - index + 1;
+          const wrapper = document.createElement('div');
+          wrapper.style.flex = String(span);
+          wrapper.className = 'px-0.5';
+
+          const bar = document.createElement('div');
+          bar.className = inCampaign
+            ? 'h-7 rounded-lg bg-purple-700 text-white px-2 flex items-center overflow-hidden shadow-sm'
+            : 'h-7 rounded-lg border border-dashed border-slate-200 text-slate-400 px-2 flex items-center justify-center overflow-hidden';
+          bar.title = inCampaign
+            ? `${location ? location.name : 'Campanha'}: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)} (${span} dia${span > 1 ? 's' : ''})`
+            : `Fora da campanha: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)}`;
+
+          const label = document.createElement('span');
+          label.className = 'text-[10px] font-bold truncate';
+          label.textContent = inCampaign
+            ? (span > 1
+                ? `${location ? location.name : 'Campanha'} · ${span} dias`
+                : (location ? location.name : 'Campanha'))
+            : 'Fora da campanha';
+
+          bar.appendChild(label);
+          wrapper.appendChild(bar);
+          row.appendChild(wrapper);
+          index = end + 1;
+        }
+
+        return row;
+      }
+
       function renderWeekInto(container, editable) {
         if (!container) return;
         const data = weekData();
@@ -1276,6 +1320,8 @@
         const totalHeight = minutesToPx((endHour - startHour) * 60);
 
         container.innerHTML = '';
+
+        container.appendChild(buildCampaignBanner(days, location));
 
         const header = document.createElement('div');
         header.className = 'flex border-b border-slate-200';
