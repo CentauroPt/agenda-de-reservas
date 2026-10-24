@@ -35,15 +35,44 @@ python -m http.server 8000
 Não há dependências para instalar. O único recurso externo é o Tailwind CSS via CDN
 (`cdn.tailwindcss.com`), pelo que é necessária ligação à internet na primeira carga.
 
-### Publicar no GitHub Pages
+### Publicar no Vercel
 
-`Settings → Pages → Deploy from a branch → main / (root)`. O ficheiro `index.html` na raiz é servido
-diretamente.
+O projeto é um site estático puro (sem build, sem dependências), por isso o deploy é direto:
+
+1. Em [vercel.com/new](https://vercel.com/new), importar o repositório `CentauroPt/agenda-de-reservas`.
+2. Configuração do projeto:
+   - **Framework Preset:** `Other`
+   - **Build Command:** vazio
+   - **Output Directory:** vazio (raiz)
+   - **Install Command:** vazio
+3. Deploy. O `index.html` da raiz passa a ser servido em `https://<projeto>.vercel.app`.
+
+O ficheiro `vercel.json` já define `cleanUrls`, `trailingSlash: false` e cabeçalhos de segurança
+(`X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`), além de cache de 1 dia para as
+imagens em `docs/`. Não são necessárias variáveis de ambiente.
+
+Alternativa por linha de comandos (depois de `vercel login`):
+
+```bash
+npx vercel --prod
+```
+
+Cada `git push` para `main` gera automaticamente um novo deployment; os restantes branches e pull
+requests geram *preview deployments*.
+
+> Nota: em produção os dados das reservas continuam no `localStorage` de cada visitante. No domínio
+> Vercel isso é aceitável para demonstração, mas para uso real é preciso backend (ver limitações).
+
+### Publicar no GitHub Pages (alternativa)
+
+`Settings → Pages → Deploy from a branch → main / (root)`. O `index.html` da raiz é servido
+diretamente, sem precisar do `vercel.json`.
 
 ## Estrutura
 
 ```
 index.html   # aplicação completa (HTML + CSS + JavaScript)
+vercel.json  # configuração de deploy estático no Vercel
 docs/        # capturas de ecrã usadas na documentação
 ```
 
