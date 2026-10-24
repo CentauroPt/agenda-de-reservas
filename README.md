@@ -183,6 +183,19 @@ automaticamente na primeira abertura.
 - “Esqueci o PIN” permite recomeçar, mas **apaga os dados deste navegador** (reservas, campanhas,
   configurações).
 
+## Identidade
+
+Na sub-página **Google Calendar** existe o bloco **🪪 Identidade**, que permite alterar:
+
+- **ícone** (emoji) **ou imagem/logo** carregada do computador (PNG, JPG, WebP ou SVG até 400 KB),
+  guardada no `localStorage` como `data:` URL;
+- **título** e **subtítulo** do cabeçalho;
+- **título e subtítulo do painel** de administração;
+- **título do calendário público** (“Escolha a sessão…”);
+- **etiquetas dos separadores** (Calendário / Gestão).
+
+Tudo com pré-visualização, botão **Aplicar** e **Repor identidade**.
+
 ## Aparência
 
 Na sub-página **Google Calendar** existe o bloco **🎨 Aparência**, que permite personalizar

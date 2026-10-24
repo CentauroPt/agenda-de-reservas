@@ -78,15 +78,15 @@
   <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-3 sm:px-4 min-h-16 py-2 flex items-center justify-between gap-2">
       <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
-        <span class="text-2xl shrink-0">🎓</span>
+        <span id="brand-logo" class="text-2xl shrink-0">🎓</span>
         <div class="min-w-0">
-          <h1 class="font-bold text-slate-900 leading-tight text-sm sm:text-base truncate">Campanha Educativa PT</h1>
-          <span class="hidden sm:block text-xs text-slate-500">Fundação "la Caixa" • Reservas Creactivity</span>
+          <h1 id="brand-title" class="font-bold text-slate-900 leading-tight text-sm sm:text-base truncate">Campanha Educativa PT</h1>
+          <span id="brand-subtitle" class="hidden sm:block text-xs text-slate-500">Fundação "la Caixa" • Reservas Creactivity</span>
         </div>
       </div>
       <nav class="flex space-x-1 sm:space-x-2 bg-slate-100 p-1 rounded-xl shrink-0">
-        <button id="btn-show-public" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm"><span class="hidden sm:inline">📅 Calendário de Reservas</span><span class="sm:hidden">📅 Calendário</span></button>
-        <button id="btn-show-admin" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900"><span class="hidden sm:inline">⚙️ Painel Administrador</span><span class="sm:hidden">⚙️ Admin</span></button>
+        <button id="btn-show-public" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm"><span data-brand-tab="calendar" class="hidden sm:inline">📅 Calendário de Reservas</span><span data-brand-tab="calendar" class="sm:hidden">📅 Calendário</span></button>
+        <button id="btn-show-admin" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900"><span data-brand-tab="admin" class="hidden sm:inline">⚙️ Painel Administrador</span><span data-brand-tab="admin" class="sm:hidden">⚙️ Admin</span></button>
       </nav>
     </div>
   </header>
@@ -96,7 +96,7 @@
     <section id="page-public" class="space-y-4">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm gap-4">
         <div>
-          <h2 class="text-lg font-bold text-slate-900">Selecione uma Sessão para Reservar</h2>
+          <h2 id="public-heading" class="text-lg font-bold text-slate-900">Selecione uma Sessão para Reservar</h2>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <select id="location-select" aria-label="Campanha" class="px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 bg-white"></select>
@@ -249,8 +249,8 @@
     <section id="page-admin" class="hidden space-y-6">
       <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h2 class="text-2xl font-extrabold">⚙️ Painel de Administração</h2>
-          <p class="text-xs text-slate-400 mt-1">Definição de horários, campanhas, reservas e exportação de dados.</p>
+          <h2 id="admin-heading" class="text-2xl font-extrabold">⚙️ Painel de Administração</h2>
+          <p id="admin-subheading" class="text-xs text-slate-400 mt-1">Definição de horários, campanhas, reservas e exportação de dados.</p>
         </div>
         <div class="flex flex-wrap gap-2">
           <button id="btn-lock-admin" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-md">🔒 Bloquear</button>
@@ -399,6 +399,75 @@
       <!-- /admin-main-view -->
 
       <div id="admin-google-view" class="hidden space-y-6">
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900">🪪 Identidade</h2>
+            <p class="text-xs text-slate-500 mt-1">Ícone/logo, título, subtítulo e textos do cabeçalho. A imagem fica guardada neste navegador.</p>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <span id="brand-preview-logo" class="text-2xl shrink-0">🎓</span>
+            <div class="min-w-0">
+              <div id="brand-preview-title" class="font-bold text-sm text-slate-900 truncate">Campanha Educativa PT</div>
+              <div id="brand-preview-subtitle" class="text-[11px] text-slate-500 truncate">Fundação "la Caixa" • Reservas Creactivity</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label for="brand-logo-emoji" class="block text-[11px] font-bold text-slate-700">Ícone (emoji)</label>
+              <input id="brand-logo-emoji" maxlength="4" class="w-full p-2 border rounded-lg text-base">
+              <p class="text-[10px] text-slate-400">Usado quando não há imagem carregada.</p>
+            </div>
+
+            <div class="space-y-2">
+              <label for="brand-logo-file" class="block text-[11px] font-bold text-slate-700">Imagem / logo</label>
+              <input id="brand-logo-file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" class="block w-full text-[11px] file:mr-2 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-slate-800 file:text-white file:text-[11px] file:font-bold">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-400">PNG, JPG, WebP ou SVG · até 400 KB.</span>
+                <button type="button" id="btn-brand-remove-image" class="text-[10px] font-bold text-rose-600 hover:underline">Remover imagem</button>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label for="brand-title-input" class="block text-[11px] font-bold text-slate-700">Título</label>
+              <input id="brand-title-input" class="w-full p-2 border rounded-lg text-xs font-bold">
+            </div>
+            <div class="space-y-2">
+              <label for="brand-subtitle-input" class="block text-[11px] font-bold text-slate-700">Subtítulo</label>
+              <input id="brand-subtitle-input" class="w-full p-2 border rounded-lg text-xs">
+            </div>
+            <div class="space-y-2">
+              <label for="admin-title-input" class="block text-[11px] font-bold text-slate-700">Título do painel</label>
+              <input id="admin-title-input" class="w-full p-2 border rounded-lg text-xs font-bold">
+            </div>
+            <div class="space-y-2">
+              <label for="admin-subtitle-input" class="block text-[11px] font-bold text-slate-700">Subtítulo do painel</label>
+              <input id="admin-subtitle-input" class="w-full p-2 border rounded-lg text-xs">
+            </div>
+            <div class="space-y-2">
+              <label for="public-heading-input" class="block text-[11px] font-bold text-slate-700">Título do calendário público</label>
+              <input id="public-heading-input" class="w-full p-2 border rounded-lg text-xs">
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div class="space-y-2">
+                <label for="tab-calendar-input" class="block text-[11px] font-bold text-slate-700">Separador calendário</label>
+                <input id="tab-calendar-input" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+              <div class="space-y-2">
+                <label for="tab-admin-input" class="block text-[11px] font-bold text-slate-700">Separador painel</label>
+                <input id="tab-admin-input" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button id="btn-apply-branding" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-sm">Aplicar</button>
+            <button id="btn-reset-branding" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">Repor identidade</button>
+          </div>
+          <div id="branding-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Identidade por omissão.</div>
+        </div>
+
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div>
             <h2 class="text-lg font-bold text-slate-900">🎨 Aparência</h2>
@@ -638,6 +707,17 @@
           }
         },
         adminPinHash: '',
+        branding: {
+          logoEmoji: '🎓',
+          logoImage: '',
+          title: 'Campanha Educativa PT',
+          subtitle: 'Fundação "la Caixa" • Reservas Creactivity',
+          adminTitle: '⚙️ Painel de Administração',
+          adminSubtitle: 'Definição de horários, campanhas, reservas e exportação de dados.',
+          publicHeading: 'Selecione uma Sessão para Reservar',
+          tabCalendar: '📅 Calendário de Reservas',
+          tabAdmin: '⚙️ Painel Administrador'
+        },
         bookings: {},
         currentWeekOffset: 0,
         selectedSession: null
@@ -735,6 +815,20 @@
           appData.dateSlots = normalizeDateSlots(parsed.dateSlots);
           appData.adminPinHash = typeof parsed.adminPinHash === 'string' ? parsed.adminPinHash : '';
 
+          const branding = parsed.branding && typeof parsed.branding === 'object' ? parsed.branding : {};
+          const brandingText = (key, fallback) => (typeof branding[key] === 'string' && branding[key].trim() ? branding[key] : fallback);
+          appData.branding = {
+            logoEmoji: brandingText('logoEmoji', '🎓').slice(0, 4),
+            logoImage: typeof branding.logoImage === 'string' && branding.logoImage.indexOf('data:image/') === 0 ? branding.logoImage : '',
+            title: brandingText('title', 'Campanha Educativa PT'),
+            subtitle: brandingText('subtitle', 'Fundação "la Caixa" • Reservas Creactivity'),
+            adminTitle: brandingText('adminTitle', '⚙️ Painel de Administração'),
+            adminSubtitle: brandingText('adminSubtitle', 'Definição de horários, campanhas, reservas e exportação de dados.'),
+            publicHeading: brandingText('publicHeading', 'Selecione uma Sessão para Reservar'),
+            tabCalendar: brandingText('tabCalendar', '📅 Calendário de Reservas'),
+            tabAdmin: brandingText('tabAdmin', '⚙️ Painel Administrador')
+          };
+
           const appearance = parsed.appearance && typeof parsed.appearance === 'object' ? parsed.appearance : {};
           const legacyBanners = appearance.banners && typeof appearance.banners === 'object' ? appearance.banners : {};
 
@@ -786,6 +880,7 @@
             google: appData.google,
             appearance: appData.appearance,
             adminPinHash: appData.adminPinHash,
+            branding: appData.branding,
             bookings: appData.bookings
           }));
         } catch (error) {
@@ -2856,6 +2951,174 @@
         showToast('Dados locais apagados.', 'success');
       };
 
+      /* ---------- identidade ---------- */
+
+      const BRANDING_DEFAULTS = {
+        logoEmoji: '🎓',
+        logoImage: '',
+        title: 'Campanha Educativa PT',
+        subtitle: 'Fundação "la Caixa" • Reservas Creactivity',
+        adminTitle: '⚙️ Painel de Administração',
+        adminSubtitle: 'Definição de horários, campanhas, reservas e exportação de dados.',
+        publicHeading: 'Selecione uma Sessão para Reservar',
+        tabCalendar: '📅 Calendário de Reservas',
+        tabAdmin: '⚙️ Painel Administrador'
+      };
+
+      function applyBranding() {
+        const branding = appData.branding || BRANDING_DEFAULTS;
+
+        const title = document.getElementById('brand-title');
+        const subtitle = document.getElementById('brand-subtitle');
+        const adminHeading = document.getElementById('admin-heading');
+        const adminSubheading = document.getElementById('admin-subheading');
+        const publicHeading = document.getElementById('public-heading');
+        const logo = document.getElementById('brand-logo');
+
+        if (title) title.textContent = branding.title;
+        if (subtitle) subtitle.textContent = branding.subtitle;
+        if (adminHeading) adminHeading.textContent = branding.adminTitle;
+        if (adminSubheading) adminSubheading.textContent = branding.adminSubtitle;
+        if (publicHeading) publicHeading.textContent = branding.publicHeading;
+
+        document.querySelectorAll('[data-brand-tab="calendar"]').forEach((element) => {
+          element.textContent = branding.tabCalendar;
+        });
+        document.querySelectorAll('[data-brand-tab="admin"]').forEach((element) => {
+          element.textContent = branding.tabAdmin;
+        });
+
+        if (logo) {
+          if (branding.logoImage) {
+            logo.innerHTML = '';
+            const image = document.createElement('img');
+            image.src = branding.logoImage;
+            image.alt = '';
+            image.className = 'w-8 h-8 rounded-lg object-cover';
+            logo.appendChild(image);
+          } else {
+            logo.textContent = branding.logoEmoji || '🎓';
+          }
+        }
+
+        renderBrandingPreview();
+      }
+
+      function renderBrandingPreview() {
+        const branding = appData.branding || BRANDING_DEFAULTS;
+        const logo = document.getElementById('brand-preview-logo');
+        const title = document.getElementById('brand-preview-title');
+        const subtitle = document.getElementById('brand-preview-subtitle');
+
+        if (logo) {
+          if (branding.logoImage) {
+            logo.innerHTML = '';
+            const image = document.createElement('img');
+            image.src = branding.logoImage;
+            image.alt = '';
+            image.className = 'w-8 h-8 rounded-lg object-cover';
+            logo.appendChild(image);
+          } else {
+            logo.textContent = branding.logoEmoji || '🎓';
+          }
+        }
+        if (title) title.textContent = branding.title;
+        if (subtitle) subtitle.textContent = branding.subtitle;
+      }
+
+      function renderBrandingControls() {
+        const branding = appData.branding || BRANDING_DEFAULTS;
+        const map = {
+          'brand-logo-emoji': 'logoEmoji',
+          'brand-title-input': 'title',
+          'brand-subtitle-input': 'subtitle',
+          'admin-title-input': 'adminTitle',
+          'admin-subtitle-input': 'adminSubtitle',
+          'public-heading-input': 'publicHeading',
+          'tab-calendar-input': 'tabCalendar',
+          'tab-admin-input': 'tabAdmin'
+        };
+
+        Object.keys(map).forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) element.value = branding[map[id]] || '';
+        });
+      }
+
+      function setBrandingStatus(message, tone) {
+        const element = document.getElementById('branding-status');
+        if (!element) return;
+        const tones = {
+          ok: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+          error: 'bg-rose-50 border-rose-200 text-rose-800',
+          info: 'bg-slate-50 border-slate-200 text-slate-600'
+        };
+        element.className = `text-xs font-semibold border rounded-xl px-3 py-2 ${tones[tone] || tones.info}`;
+        element.textContent = message;
+      }
+
+      function brandingFromControls() {
+        const get = (id) => {
+          const element = document.getElementById(id);
+          return element ? element.value : '';
+        };
+
+        appData.branding = {
+          logoEmoji: (get('brand-logo-emoji') || '🎓').slice(0, 4),
+          logoImage: appData.branding.logoImage || '',
+          title: get('brand-title-input') || BRANDING_DEFAULTS.title,
+          subtitle: get('brand-subtitle-input'),
+          adminTitle: get('admin-title-input') || BRANDING_DEFAULTS.adminTitle,
+          adminSubtitle: get('admin-subtitle-input'),
+          publicHeading: get('public-heading-input') || BRANDING_DEFAULTS.publicHeading,
+          tabCalendar: get('tab-calendar-input') || BRANDING_DEFAULTS.tabCalendar,
+          tabAdmin: get('tab-admin-input') || BRANDING_DEFAULTS.tabAdmin
+        };
+      }
+
+      document.getElementById('brand-logo-file').onchange = (event) => {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        if (file.size > 400 * 1024) {
+          setBrandingStatus('A imagem tem de ter menos de 400 KB.', 'error');
+          event.target.value = '';
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+          brandingFromControls();
+          appData.branding.logoImage = String(reader.result);
+          applyBranding();
+          setBrandingStatus('Imagem carregada. Clica em Aplicar para guardar.', 'ok');
+        };
+        reader.readAsDataURL(file);
+      };
+
+      document.getElementById('btn-brand-remove-image').onclick = () => {
+        brandingFromControls();
+        appData.branding.logoImage = '';
+        document.getElementById('brand-logo-file').value = '';
+        applyBranding();
+        setBrandingStatus('Imagem removida (volta o emoji).', 'info');
+      };
+
+      document.getElementById('btn-apply-branding').onclick = () => {
+        brandingFromControls();
+        saveState();
+        applyBranding();
+        renderBrandingControls();
+        setBrandingStatus('Identidade guardada e aplicada.', 'ok');
+        showToast('Identidade aplicada.', 'success');
+      };
+
+      document.getElementById('btn-reset-branding').onclick = () => {
+        appData.branding = Object.assign({}, BRANDING_DEFAULTS);
+        saveState();
+        applyBranding();
+        renderBrandingControls();
+        setBrandingStatus('Identidade reposta.', 'info');
+      };
+
       /* ---------- aparencia ---------- */
 
       const FONT_OPTIONS = [
@@ -3579,6 +3842,8 @@
       renderGoogleConnection();
       renderAppearanceControls();
       applyAppearance();
+      renderBrandingControls();
+      applyBranding();
       initAdminWindows();
       jumpToLocationStart(currentLocation());
       renderCalendar();
