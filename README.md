@@ -133,3 +133,14 @@ automaticamente na primeira abertura.
 2. Sincronização bidirecional com Google Calendar (OAuth na conta da organização).
 3. Notificações por e-mail ao responsável do grupo e à organização.
 4. Relatórios de ocupação por campanha e exportação para Excel.
+
+## Fluxo de trabalho
+
+Cada tarefa termina com commit e push para `main`, pelo que o deploy no Vercel acompanha
+automaticamente. O atalho valida a sintaxe do JavaScript de `index.html` antes de publicar:
+
+```powershell
+pwsh tools/sync.ps1 -Message "Corrige validação do formulário"
+```
+
+As regras completas estão em [AGENTS.md](AGENTS.md).
