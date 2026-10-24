@@ -4,6 +4,82 @@ Este diretório contém as funções serverless (Vercel) que dão suporte a rese
 sincronização com o Google Calendar. **O frontend ainda não está ligado a elas** — a aplicação
 publicada continua a usar `localStorage`. A ligação é a fase seguinte (ver o fim).
 
+## Guia rápido de configuração (Vercel + Google)
+
+Ordem recomendada — cada passo tem um teste no fim.
+
+### 1. Vercel ligado ao GitHub
+
+O projeto importa o repositório `CentauroPt/agenda-de-reservas` (branch `main`). Cada push reconstrói
+sozinho. Anota o domínio em **Project → Domains** (ex.: `agenda-de-reservas.vercel.app`).
+
+Teste: abrir `https://<domínio>/api/bookings` → deve responder `{"bookings":[]}`.
+
+### 2. Base de dados (para partilhar reservas)
+
+**Storage → Create Database → Upstash Redis** (plano gratuito) → **Connect** ao projeto.
+A integração cria `KV_REST_API_URL` e `KV_REST_API_TOKEN` (se criar nomes `UPSTASH_REDIS_REST_*`,
+copia os valores para variáveis com os nomes `KV_*`, que são os que o código usa).
+
+Sem esta base de dados, as reservas não persistem no servidor (as funções continuam a responder, mas
+cada invocação parte de uma lista vazia).
+
+### 3. `ADMIN_TOKEN`
+
+Em **Settings → Environment Variables**, cria `ADMIN_TOKEN` com um valor longo e secreto, por exemplo:
+
+```
+c4a6c5c3d2915be4efbbf39a91893fc3340e816c8dda3fbf
+```
+
+Guarda-o: é o que se cola no painel da app (cartão do servidor).
+
+### 4. Conta de serviço Google
+
+1. `console.cloud.google.com` → **New project** (ex.: `agenda-creactivity`).
+2. **APIs & Services → Library** → ativa **Google Calendar API**.
+3. **IAM & Admin → Service accounts → Create service account** (nome `agenda-sync`) → **Done**.
+4. Nessa conta: **Keys → Add key → Create new key → JSON** → descarrega o ficheiro.
+5. Email da conta (algo como `agenda-sync@agenda-creactivity.iam.gserviceaccount.com`).
+6. Em `calendar.google.com` → **Definições** do calendário da campanha → **Partilhar com pessoas
+   específicas** → adiciona esse email com **“Fazer alterações em eventos”**.
+
+### 5. Variáveis no Vercel
+
+| Nome | Valor |
+|---|---|
+| `GOOGLE_SERVICE_ACCOUNT_JSON` | conteúdo do JSON **numa só linha** |
+| `GOOGLE_CALENDAR_ID` | email/ID do calendário (ex.: `portugal@creactivitybus.com`) |
+| `ADMIN_TOKEN` | o valor do passo 3 |
+
+Para transformar o JSON numa linha (PowerShell, na pasta onde está a chave):
+
+```powershell
+Get-Content .\chave.json -Raw | ConvertFrom-Json | ConvertTo-Json -Compress -Depth 5
+```
+
+Copia a saída inteira para o valor da variável. Nunca colar a chave em chats ou issues.
+
+Depois de guardar as variáveis: **Deployments → Redeploy**.
+
+### 6. Testar
+
+```powershell
+# público (sem dados pessoais)
+curl https://<domínio>/api/bookings
+
+# com token (lista completa)
+curl -H "x-admin-token: <ADMIN_TOKEN>" https://<domínio>/api/bookings
+
+# sincronização
+curl -X POST -H "x-admin-token: <ADMIN_TOKEN>" https://<domínio>/api/sync
+```
+
+### 7. Ligar a app
+
+Painel → **Google Calendar** → cartão **🌐 Servidor de reservas**: colar `https://<domínio>` e o
+`ADMIN_TOKEN` → **Guardar** → **Testar ligação**.
+
 ## Endpoints
 
 | Método | Rota | Autenticação | Efeito |
