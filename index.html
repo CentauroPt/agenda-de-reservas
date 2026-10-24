@@ -1576,8 +1576,14 @@
         const location = data.location;
         const daySlots = data.daySlots;
         const range = computeHourRange(daySlots);
-        const startHour = range.startHour;
-        const endHour = range.endHour;
+        let startHour = range.startHour;
+        let endHour = range.endHour;
+
+        if (days.some((day) => day.fullDate === todayISO())) {
+          const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+          startHour = Math.min(startHour, Math.floor(nowMin / 60));
+          endHour = Math.max(endHour, Math.min(24, Math.ceil(nowMin / 60) + 1));
+        }
         const totalHeight = minutesToPx((endHour - startHour) * 60);
 
         container.innerHTML = '';
@@ -1597,9 +1603,12 @@
           const muted = !inCampaign || (day.isWeekend && !hasSlots);
           cell.className = 'flex-1 text-center py-2 border-l border-slate-100';
           const isToday = day.fullDate === todayISO();
+          const dateClass = isToday
+            ? 'mx-auto mt-0.5 flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600 text-white text-sm font-extrabold'
+            : `text-lg font-extrabold ${muted ? 'text-slate-300' : 'text-slate-900'}`;
           cell.innerHTML = `
             <div class="text-[10px] font-bold ${muted ? 'text-slate-300' : 'text-slate-500'}">${day.name}</div>
-            <div class="text-lg font-extrabold ${muted ? 'text-slate-300' : (isToday ? 'text-indigo-600' : 'text-slate-900')}">${day.dateNumber}</div>
+            <div class="${dateClass}">${day.dateNumber}</div>
           `;
           header.appendChild(cell);
         });
@@ -1636,6 +1645,17 @@
           layoutSlotColumns(daySlots[day.fullDate]).forEach((slot) => {
             column.appendChild(buildEventElement(day, slot, startHour, editable));
           });
+
+          if (day.fullDate === todayISO()) {
+            const minutesNow = new Date().getHours() * 60 + new Date().getMinutes();
+            if (minutesNow >= startHour * 60 && minutesNow <= endHour * 60) {
+              const line = document.createElement('div');
+              line.className = 'now-line absolute left-0 right-0 z-10 pointer-events-none';
+              line.style.top = minutesToPx(minutesNow - startHour * 60) + 'px';
+              line.innerHTML = '<div class="relative h-0.5 bg-rose-500"><span class="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-rose-500"></span></div>';
+              column.appendChild(line);
+            }
+          }
 
           if (editable && isWithinCampaign(day, location)) {
             column.addEventListener('dblclick', (event) => {
@@ -2386,7 +2406,16 @@
 
       document.getElementById('btn-prev-week').onclick = () => { appData.currentWeekOffset--; renderCalendar(); };
       document.getElementById('btn-next-week').onclick = () => { appData.currentWeekOffset++; renderCalendar(); };
-      document.getElementById('btn-today').onclick = () => { appData.currentWeekOffset = 0; renderCalendar(); };
+      document.getElementById('btn-today').onclick = () => {
+        appData.currentWeekOffset = 0;
+        renderCalendar();
+        setTimeout(() => {
+          const week = document.getElementById('calendar-week');
+          if (!week) return;
+          const top = week.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+        }, 80);
+      };
 
       document.getElementById('location-select').onchange = (event) => {
         const index = parseInt(event.target.value, 10);
