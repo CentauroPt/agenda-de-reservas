@@ -2,6 +2,7 @@
 
 const store = require('./_store');
 const google = require('./_google');
+const cors = require('./_cors');
 
 function authorized(req) {
   const token = process.env.ADMIN_TOKEN;
@@ -17,6 +18,9 @@ function todayISO() {
 }
 
 module.exports = async (req, res) => {
+  cors.applyCors(res);
+  if (cors.handlePreflight(req, res)) return;
+
   try {
     if (req.method !== 'POST' && req.method !== 'GET') {
       res.setHeader('Allow', 'GET, POST');

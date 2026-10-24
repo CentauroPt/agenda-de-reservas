@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const store = require('./_store');
+const cors = require('./_cors');
 
 function authorized(req) {
   const token = process.env.ADMIN_TOKEN;
@@ -19,6 +20,9 @@ function parseBody(req) {
 }
 
 module.exports = async (req, res) => {
+  cors.applyCors(res);
+  if (cors.handlePreflight(req, res)) return;
+
   try {
     if (req.method === 'GET') {
       const list = await store.readAll();

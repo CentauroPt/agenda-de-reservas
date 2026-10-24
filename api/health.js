@@ -2,8 +2,12 @@
 'use strict';
 
 const store = require('./_store');
+const cors = require('./_cors');
 
 module.exports = async (req, res) => {
+  cors.applyCors(res);
+  if (cors.handlePreflight(req, res)) return;
+
   let armazenamento = 'nao testado';
 
   try {
