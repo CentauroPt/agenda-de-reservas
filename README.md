@@ -140,7 +140,8 @@ Cada tarefa termina com commit e push para `main`, pelo que o deploy no Vercel a
 automaticamente. O atalho valida a sintaxe do JavaScript de `index.html` antes de publicar:
 
 ```powershell
-pwsh tools/sync.ps1 -Message "Corrige validação do formulário"
+# Windows PowerShell (incluído no Windows), a partir da raiz do repositório
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/sync.ps1 -Message "Corrige validação do formulário"
 ```
 
 As regras completas estão em [AGENTS.md](AGENTS.md).

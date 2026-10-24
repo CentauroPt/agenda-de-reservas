@@ -12,6 +12,10 @@ Depois de **cada tarefa** concluída neste repositório:
 Atalho (faz os três passos e valida o branch):
 
 ```powershell
+# Windows PowerShell (incluído no Windows), a partir da raiz do repositório
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/sync.ps1 -Message "Descrição da tarefa"
+
+# PowerShell 7+, se estiver instalado
 pwsh tools/sync.ps1 -Message "Descrição da tarefa"
 ```
 

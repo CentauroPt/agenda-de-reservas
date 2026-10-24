@@ -20,21 +20,21 @@ $env:GIT_SSH_COMMAND = 'ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new
 function Assert-Syntax {
     $node = Get-Command node -ErrorAction SilentlyContinue
     if (-not $node) {
-        Write-Host 'Node não encontrado; a saltar verificação de sintaxe.' -ForegroundColor Yellow
+        Write-Host 'Node nao encontrado; a saltar verificacao de sintaxe.' -ForegroundColor Yellow
         return
     }
 
     $html = Get-Content -Raw -LiteralPath (Join-Path $repo 'index.html')
     $match = [regex]::Match($html, '(?s)<script>\s*(\(function \(\).*?\)\(\);)\s*</script>')
     if (-not $match.Success) {
-        throw 'Não encontrei o bloco de script da aplicação em index.html.'
+        throw 'Nao encontrei o bloco de script da aplicacao em index.html.'
     }
 
     $temp = Join-Path ([System.IO.Path]::GetTempPath()) 'agenda-sync-check.js'
     Set-Content -LiteralPath $temp -Value $match.Groups[1].Value -Encoding utf8
     try {
         & $node.Source --check $temp
-        if ($LASTEXITCODE -ne 0) { throw 'Verificação de sintaxe do JavaScript falhou.' }
+        if ($LASTEXITCODE -ne 0) { throw 'Verificacao de sintaxe do JavaScript falhou.' }
         Write-Host 'Sintaxe do JavaScript: OK' -ForegroundColor Green
     }
     finally {
@@ -46,14 +46,14 @@ Push-Location $repo
 try {
     $branch = (git rev-parse --abbrev-ref HEAD).Trim()
     if ($branch -ne 'main') {
-        throw "Está no branch '$branch'. A sincronização automática só é feita em 'main'."
+        throw "Esta no branch '$branch'. A sincronizacao automatica so e feita em 'main'."
     }
 
     Assert-Syntax
 
     $changes = @(git status --porcelain)
     if ($changes.Count -eq 0) {
-        Write-Host 'Sem alterações locais para commit.' -ForegroundColor Yellow
+        Write-Host 'Sem alteracoes locais para commit.' -ForegroundColor Yellow
         git fetch origin main --quiet
         $ahead = [int](git rev-list --count 'origin/main..HEAD')
         if ($ahead -gt 0) {
@@ -61,7 +61,7 @@ try {
             Write-Host "Enviados $ahead commit(s) pendentes." -ForegroundColor Green
         }
         else {
-            Write-Host 'Repositório já sincronizado.' -ForegroundColor Green
+            Write-Host 'Repositorio ja sincronizado.' -ForegroundColor Green
         }
         return
     }
