@@ -257,6 +257,21 @@
       </div>
     </div>
 
+    <!-- CANCELAR RESERVA -->
+    <div id="cancel-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[70] hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-4 border border-slate-200" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
+        <div>
+          <h3 id="cancel-title" class="text-lg font-extrabold text-slate-900">Cancelar reserva</h3>
+          <p id="cancel-subtitle" class="text-xs text-slate-500 mt-1">--</p>
+        </div>
+        <div id="cancel-body" class="text-xs text-slate-700 space-y-1"></div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button id="btn-cancel-close" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold">Fechar</button>
+          <button id="btn-cancel-confirm" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold">Sim, cancelar reserva</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <section id="page-admin" class="hidden space-y-6">
       <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -461,7 +476,7 @@
 
           <div class="p-3 bg-white border border-slate-200 rounded-xl">
             <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Variáveis disponíveis no template</p>
-            <p class="text-[11px] text-slate-600 font-mono leading-relaxed break-words">to_email · to_name · from_name · reply_to · subject · message · locality · address · school · students · grade · date · start · end · duration · companion · companion_phone · phone · la_caixa · booking_ref</p>
+            <p class="text-[11px] text-slate-600 font-mono leading-relaxed break-words">to_email · to_name · from_name · reply_to · subject · message · locality · address · school · students · grade · date · start · end · duration · companion · companion_phone · phone · la_caixa · booking_ref · cancel_url · cancel_link</p>
           </div>
 
           <div class="flex flex-wrap items-end gap-2">
@@ -2644,7 +2659,8 @@
           grade: data.grade,
           laCaixa: data.laCaixa,
           laCaixaDetails: data.laCaixaDetails,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          cancelToken: makeCancelToken()
         };
 
         saveState();
@@ -3135,6 +3151,92 @@
         showToast('Dados locais apagados.', 'success');
       };
 
+      /* ---------- cancelamento por link ---------- */
+
+      function makeCancelToken() {
+        const bytes = new Uint8Array(12);
+        if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(bytes);
+        else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+        return Array.from(bytes).map((byte) => byte.toString(16).padStart(2, '0')).join('');
+      }
+
+      function cancelUrlFor(booking) {
+        const base = `${window.location.origin}${window.location.pathname}`;
+        return `${base}?cancelar=${booking.cancelToken || ''}`;
+      }
+
+      function openCancelModal(entry, notFound) {
+        const modal = document.getElementById('cancel-modal');
+        const title = document.getElementById('cancel-title');
+        const subtitle = document.getElementById('cancel-subtitle');
+        const body = document.getElementById('cancel-body');
+        const confirm = document.getElementById('btn-cancel-confirm');
+
+        body.innerHTML = '';
+
+        if (notFound) {
+          title.textContent = 'Reserva não encontrada';
+          subtitle.textContent = 'Este link não corresponde a nenhuma reserva guardada neste dispositivo.';
+          body.textContent = 'As reservas ficam guardadas no navegador onde foram feitas. Abre o link nesse mesmo dispositivo e navegador.';
+          confirm.classList.add('hidden');
+          modal.classList.remove('hidden');
+          return;
+        }
+
+        const booking = entry.booking;
+        title.textContent = 'Cancelar reserva';
+        subtitle.textContent = `${formatHumanDate(entry.date)} · ${booking.sessionStart || entry.start} · ${entry.locationName}`;
+
+        const lines = [
+          ['Escola', booking.schoolName],
+          ['Alunos', booking.students],
+          ['Responsável', `${booking.firstName || ''} ${booking.lastName || ''}`.trim()],
+          ['E-mail', booking.email]
+        ];
+        lines.forEach((line) => {
+          const row = document.createElement('div');
+          row.innerHTML = `<span class="text-slate-400 font-bold text-[10px] uppercase">${line[0]}: </span><span class="font-semibold">${escapeHtml(String(line[1] || '—'))}</span>`;
+          body.appendChild(row);
+        });
+
+        const note = document.createElement('p');
+        note.className = 'text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 mt-2';
+        note.textContent = 'Ao cancelar, o horário volta a ficar disponível para outras reservas.';
+        body.appendChild(note);
+
+        confirm.classList.remove('hidden');
+        confirm.onclick = () => confirmCancellation(entry);
+        modal.classList.remove('hidden');
+      }
+
+      function closeCancelModal() {
+        document.getElementById('cancel-modal').classList.add('hidden');
+      }
+
+      function confirmCancellation(entry) {
+        delete appData.bookings[entry.key];
+        saveState();
+        renderCalendar();
+        renderBookings();
+        closeCancelModal();
+        history.replaceState({}, '', window.location.pathname);
+        showToast('Reserva cancelada. O horário está novamente disponível.', 'success');
+      }
+
+      function handleCancelLink() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('cancelar');
+        if (!token) return;
+
+        const entry = getBookingEntries().find((item) => item.booking && item.booking.cancelToken === token);
+        openCancelModal(entry, !entry);
+      }
+
+      document.getElementById('btn-cancel-close').onclick = closeCancelModal;
+      document.getElementById('cancel-modal').addEventListener('click', (event) => {
+        if (event.target === document.getElementById('cancel-modal')) closeCancelModal();
+      });
+
       /* ---------- email de confirmacao ---------- */
 
       const EMAILJS_SRC = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
@@ -3179,6 +3281,7 @@
           `Fundação la Caixa: ${laCaixa}`,
           '',
           `Referência: ${booking.date} ${booking.sessionStart}`,
+          booking.cancelToken ? `Para cancelar esta reserva: ${cancelUrlFor(booking)}` : '',
           '',
           `— ${config.fromName || 'Campanha Educativa PT'}`
         ].filter((line) => line !== '').join('\n');
@@ -3203,7 +3306,9 @@
           companion_phone: booking.companionPhone || '',
           phone: booking.phone || '',
           la_caixa: laCaixa,
-          booking_ref: `${booking.date} ${booking.sessionStart}`
+          booking_ref: `${booking.date} ${booking.sessionStart}`,
+          cancel_url: booking.cancelToken ? cancelUrlFor(booking) : '',
+          cancel_link: booking.cancelToken ? `<a href="${cancelUrlFor(booking)}">Cancelar reserva</a>` : ''
         };
       }
 
@@ -4432,6 +4537,7 @@
       renderBrandingControls();
       applyBranding();
       renderEmailControls();
+      handleCancelLink();
       initAdminWindows();
       jumpToLocationStart(currentLocation());
       renderCalendar();

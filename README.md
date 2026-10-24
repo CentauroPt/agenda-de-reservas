@@ -192,7 +192,15 @@ reserva enviada pelo formulário dispara um email para o endereço indicado pelo
 - escola, nº de alunos e ano;
 - data, hora de início/fim e duração;
 - nome e telefone do responsável e do acompanhante;
-- programa da Fundação “la Caixa”.
+- programa da Fundação “la Caixa”;
+- **link de cancelamento** (`cancel_url` / `cancel_link`, com um token único por reserva).
+
+Ao abrir o link (`?cancelar=<token>`), a aplicação mostra os dados da reserva e, após confirmação, apaga-a —
+o horário **volta a ficar disponível** para novas reservas.
+
+> Limitação: as reservas vivem no `localStorage` do navegador. O link de cancelamento só funciona no
+> mesmo dispositivo/browser onde a reserva foi feita. Para cancelamento a partir de outro dispositivo é
+> necessário backend.
 
 O envio usa o **EmailJS** (emailjs.com), que permite enviar a partir do email da campanha sem servidor.
 No painel configuram-se: **Service ID**, **Template ID**, **Public Key**, nome do remetente, email de
