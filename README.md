@@ -19,11 +19,14 @@ grupos escolares e painel de administração com horários, durações, localida
   número de alunos (1–25), ano frequentado e programa da Fundação "la Caixa".
 
 **Painel de administração**
-- Gestão das horas de sessão da manhã e da tarde, com duração base por período (30–180 minutos).
+- Horário semanal por defeito (manhã/tarde com duração base de 30–180 minutos).
+- **Ajustes por data**: cada dia pode ter os seus próprios horários (09:00–10:15, 10:15–11:30, …), com
+  adicionar/remover por dia; o calendário mostra exatamente o que está definido em cada data.
+- **Copiar horário** de um dia para todos os dias úteis de um intervalo.
 - Campanhas (localidades) com data de início e de fim; o calendário bloqueia datas fora do intervalo.
 - Reservas registadas: listagem, contagem de alunos, cancelamento individual e **exportação CSV**
   (separador `;` e BOM, pronta para Excel).
-- Replicação de horários por intervalo de datas (simulação local) e reinício dos dados.
+- Reinício dos dados locais.
 
 ## Como usar
 
@@ -117,6 +120,12 @@ Os dados ficam no navegador, em `localStorage`, sob a chave `campanha_pt_v3`:
   "morningSessions": ["09:00", "10:49", "12:38"],
   "afternoonDuration": 60,
   "afternoonSessions": ["14:30", "15:45"],
+  "dateSlots": {
+    "2026-10-28": [
+      { "start": "08:00", "end": "08:45" },
+      { "start": "10:00", "end": "11:30" }
+    ]
+  },
   "bookings": {
     "loc-...|2026-10-27|09:00": {
       "locationId": "loc-...",
