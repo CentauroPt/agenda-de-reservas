@@ -225,6 +225,26 @@
       </div>
     </div>
 
+    <!-- PIN DO PAINEL -->
+    <div id="admin-pin-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 space-y-4 border border-slate-200" role="dialog" aria-modal="true" aria-labelledby="admin-pin-title">
+        <div>
+          <h3 id="admin-pin-title" class="text-lg font-extrabold text-slate-900">🔐 Painel protegido</h3>
+          <p id="admin-pin-subtitle" class="text-xs text-slate-500 mt-1">Introduz o PIN de administração.</p>
+        </div>
+        <input id="admin-pin-input" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="PIN" class="w-full p-2.5 border rounded-lg text-sm font-bold tracking-[0.3em] text-center">
+        <input id="admin-pin-confirm" type="password" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Repetir PIN" class="hidden w-full p-2.5 border rounded-lg text-sm font-bold tracking-[0.3em] text-center">
+        <p id="admin-pin-error" class="hidden text-xs font-semibold text-rose-600"></p>
+        <div class="flex items-center justify-between gap-2 pt-1">
+          <button type="button" id="btn-pin-reset" class="text-[10px] font-bold text-slate-400 hover:text-rose-600 underline">Esqueci o PIN</button>
+          <div class="flex gap-2">
+            <button type="button" id="btn-admin-pin-cancel" class="px-3 py-2 text-xs font-bold text-slate-500 hover:text-slate-800">Cancelar</button>
+            <button type="button" id="btn-admin-pin-submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold">Entrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <section id="page-admin" class="hidden space-y-6">
       <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -233,6 +253,7 @@
           <p class="text-xs text-slate-400 mt-1">Definição de horários, campanhas, reservas e exportação de dados.</p>
         </div>
         <div class="flex flex-wrap gap-2">
+          <button id="btn-lock-admin" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-md">🔒 Bloquear</button>
           <button id="btn-reset-windows" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold shadow-md">🪟 Repor janelas</button>
           <button id="btn-reset-data" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md">
             🗑️ Limpar Dados Locais
@@ -576,6 +597,7 @@
         dateSlots: {},
         google: { clientId: '', apiKey: '', calendarId: 'primary' },
         appearance: { bannerColor: '#6d28d9', fontFamily: '__system', fontSize: 16 },
+        adminPinHash: '',
         bookings: {},
         currentWeekOffset: 0,
         selectedSession: null
@@ -671,6 +693,7 @@
 
           appData.bookings = migrateBookings(parsed.bookings, appData.locations);
           appData.dateSlots = normalizeDateSlots(parsed.dateSlots);
+          appData.adminPinHash = typeof parsed.adminPinHash === 'string' ? parsed.adminPinHash : '';
 
           const appearance = parsed.appearance && typeof parsed.appearance === 'object' ? parsed.appearance : {};
           appData.appearance = {
@@ -702,6 +725,7 @@
             dateSlots: appData.dateSlots,
             google: appData.google,
             appearance: appData.appearance,
+            adminPinHash: appData.adminPinHash,
             bookings: appData.bookings
           }));
         } catch (error) {
@@ -1243,12 +1267,24 @@
 
         if (booked) {
           element.dataset.state = 'booked';
-          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-300 bg-slate-200 text-slate-700 px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer select-none';
-          element.innerHTML = `
-            <div class="text-[10px] font-extrabold truncate">${escapeHtml(booked.schoolName || 'Reservado')}</div>
-            <div class="text-[9px] font-bold opacity-80">${slot.startStr} – ${slot.endStr}</div>
-          `;
-          element.onclick = () => showToast(`Reservado por ${booked.schoolName || 'escola'} · ${booked.students || 0} alunos`, 'success');
+          element.style.opacity = editable ? '' : '0.55';
+
+          if (editable) {
+            element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-300 bg-slate-200 text-slate-700 px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer select-none';
+            element.innerHTML = `
+              <div class="text-[10px] font-extrabold truncate">${escapeHtml(booked.schoolName || 'Reservado')}</div>
+              <div class="text-[9px] font-bold opacity-80">${slot.startStr} – ${slot.endStr}</div>
+            `;
+            element.onclick = () => showToast(`Reservado por ${booked.schoolName || 'escola'} · ${booked.students || 0} alunos`, 'success');
+          } else {
+            element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-dashed border-slate-300 bg-slate-100 text-slate-400 px-1.5 py-1 overflow-hidden select-none cursor-not-allowed';
+            element.innerHTML = `
+              <div class="text-[10px] font-extrabold truncate">🔒 Reservado</div>
+              <div class="text-[9px] font-bold">${slot.startStr} – ${slot.endStr}</div>
+            `;
+            element.title = 'Sessão já reservada.';
+            element.onclick = () => showToast('Esta sessão já está reservada.', 'error');
+          }
         } else if (isPast) {
           element.dataset.state = 'past';
           element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 px-1.5 py-1 overflow-hidden cursor-not-allowed select-none';
@@ -2062,7 +2098,21 @@
         renderCalendar();
       };
 
-      btnAdmin.onclick = () => {
+      /* ---------- acesso ao painel ---------- */
+
+      let pinMode = 'enter';
+
+      function hashPin(pin) {
+        let hash = 2166136261;
+        const salted = `agenda::${pin}`;
+        for (let index = 0; index < salted.length; index++) {
+          hash ^= salted.charCodeAt(index);
+          hash = Math.imul(hash, 16777619);
+        }
+        return (hash >>> 0).toString(16);
+      }
+
+      function openAdminPanel() {
         pageAdmin.classList.remove('hidden');
         pagePublic.classList.add('hidden');
         btnAdmin.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm';
@@ -2072,7 +2122,103 @@
         renderAdminLocations();
         renderBookings();
         renderCalendar();
+      }
+
+      function requestAdminAccess() {
+        if (sessionStorage.getItem('agenda_admin_unlocked') === '1') {
+          openAdminPanel();
+          return;
+        }
+        pinMode = appData.adminPinHash ? 'enter' : 'define';
+        const title = document.getElementById('admin-pin-title');
+        const subtitle = document.getElementById('admin-pin-subtitle');
+        const confirm = document.getElementById('admin-pin-confirm');
+        const input = document.getElementById('admin-pin-input');
+
+        title.textContent = pinMode === 'define' ? '🔐 Definir PIN do painel' : '🔐 Painel protegido';
+        subtitle.textContent = pinMode === 'define'
+          ? 'Primeira utilização: escolhe um PIN (mínimo 4 dígitos) para proteger as reservas.'
+          : 'Introduz o PIN de administração para ver as reservas.';
+        confirm.classList.toggle('hidden', pinMode !== 'define');
+        input.value = '';
+        confirm.value = '';
+        document.getElementById('admin-pin-error').classList.add('hidden');
+        document.getElementById('admin-pin-modal').classList.remove('hidden');
+        setTimeout(() => input.focus(), 40);
+      }
+
+      function closePinModal() {
+        document.getElementById('admin-pin-modal').classList.add('hidden');
+      }
+
+      function pinError(message) {
+        const element = document.getElementById('admin-pin-error');
+        element.textContent = message;
+        element.classList.remove('hidden');
+      }
+
+      function submitAdminPin() {
+        const input = document.getElementById('admin-pin-input');
+        const confirm = document.getElementById('admin-pin-confirm');
+        const pin = input.value.trim();
+
+        if (pin.length < 4) {
+          pinError('O PIN tem de ter pelo menos 4 dígitos.');
+          return;
+        }
+
+        if (pinMode === 'define') {
+          if (pin !== confirm.value.trim()) {
+            pinError('Os dois PIN não coincidem.');
+            return;
+          }
+          appData.adminPinHash = hashPin(pin);
+          saveState();
+          sessionStorage.setItem('agenda_admin_unlocked', '1');
+          closePinModal();
+          openAdminPanel();
+          showToast('PIN definido. Painel desbloqueado.', 'success');
+          return;
+        }
+
+        if (hashPin(pin) !== appData.adminPinHash) {
+          pinError('PIN incorreto.');
+          input.value = '';
+          input.focus();
+          return;
+        }
+
+        sessionStorage.setItem('agenda_admin_unlocked', '1');
+        closePinModal();
+        openAdminPanel();
+      }
+
+      function lockAdminPanel() {
+        sessionStorage.removeItem('agenda_admin_unlocked');
+        document.getElementById('btn-show-public').click();
+        showToast('Painel bloqueado.', 'success');
+      }
+
+      document.getElementById('btn-admin-pin-submit').onclick = submitAdminPin;
+      document.getElementById('btn-admin-pin-cancel').onclick = closePinModal;
+      document.getElementById('btn-lock-admin').onclick = lockAdminPanel;
+      document.getElementById('admin-pin-input').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') submitAdminPin();
+      });
+      document.getElementById('admin-pin-confirm').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') submitAdminPin();
+      });
+      document.getElementById('admin-pin-modal').addEventListener('click', (event) => {
+        if (event.target === document.getElementById('admin-pin-modal')) closePinModal();
+      });
+      document.getElementById('btn-pin-reset').onclick = () => {
+        if (!confirm('Sem o PIN só é possível recomeçar: isto apaga reservas, campanhas e configurações deste navegador. Continuar?')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.removeItem('agenda_admin_unlocked');
+        location.reload();
       };
+
+      btnAdmin.onclick = requestAdminAccess;
 
       document.getElementById('btn-prev-week').onclick = () => { appData.currentWeekOffset--; renderCalendar(); };
       document.getElementById('btn-next-week').onclick = () => { appData.currentWeekOffset++; renderCalendar(); };

@@ -169,6 +169,18 @@ As chaves de reserva passaram a usar o `id` da campanha (e não o nome), para qu
 localidade não perca reservas. Dados de versões anteriores, guardados por nome, são migrados
 automaticamente na primeira abertura.
 
+## Privacidade e acesso
+
+- Na vista pública, as sessões reservadas aparecem **esbatidas e apenas com “🔒 Reservado”** — nunca
+  mostram a escola, os alunos ou os contactos de quem reservou; clicar apenas avisa que está reservada.
+- O **Painel de Administração exige um PIN**. Na primeira abertura é pedido para definir um (mínimo 4
+  dígitos); depois é pedido em cada sessão, com o botão **Bloquear** para sair.
+- O PIN é guardado como *hash* no `localStorage`, não em texto. **Atenção:** num site estático isto é
+  uma barreira de acesso, não autenticação verdadeira — quem dominar o browser pode contorná-la. Para
+  segurança real é necessário backend com contas de utilizador (ver limitações).
+- “Esqueci o PIN” permite recomeçar, mas **apaga os dados deste navegador** (reservas, campanhas,
+  configurações).
+
 ## Aparência
 
 Na sub-página **Google Calendar** existe o bloco **🎨 Aparência**, que permite:
