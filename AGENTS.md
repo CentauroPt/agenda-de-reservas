@@ -21,6 +21,20 @@ pwsh tools/sync.ps1 -Message "Descrição da tarefa"
 
 Sem `-Message`, usa a mensagem por omissão `Atualiza projeto`.
 
+## Skill: alterações só a pedido
+
+Regra do utilizador, com prioridade sobre qualquer iniciativa própria.
+
+- **Fazer exatamente o que foi pedido** e nada mais: sem melhorias, renomeações, "limpezas" ou
+  correções não solicitadas.
+- **Nunca remover, desfazer ou substituir** algo que já existe (textos, botões, cores, imagens,
+  funcionalidades, ficheiros) sem pedido explícito.
+- Se para cumprir o pedido for preciso tocar em algo fora do âmbito, **perguntar primeiro** e esperar
+  resposta antes de alterar.
+- Em caso de dúvida sobre o alcance do pedido, **perguntar** em vez de assumir.
+- Quando o pedido implicar mudar comportamento existente, faz-se **apenas** essa alteração.
+- No fim de cada tarefa, dizer explicitamente **o que mudou** e **o que não foi tocado**.
+
 ## Regras
 
 - **Depois de cada alteração**, indicar sempre dois links ao utilizador: a pré-visualização local
