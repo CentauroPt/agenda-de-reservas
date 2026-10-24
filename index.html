@@ -476,11 +476,7 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="space-y-2">
-              <label for="appearance-banner-target" class="block text-[11px] font-bold text-slate-700">Banner a personalizar</label>
-              <select id="appearance-banner-target" class="w-full p-2 border rounded-lg text-xs font-bold bg-white">
-                <option value="campaign">Banner da campanha</option>
-                <option value="outside">Banner “Fora da campanha”</option>
-              </select>
+              <p class="block text-[11px] font-bold text-slate-700">Banner da campanha</p>
               <p class="text-[10px] text-slate-400">Etiquetas disponíveis: <code>{localidade}</code>, <code>{dias}</code>, <code>{inicio}</code>, <code>{fim}</code>.</p>
             </div>
 
@@ -1536,10 +1532,16 @@
           const span = end - index + 1;
           const wrapper = document.createElement('div');
           wrapper.style.flex = String(span);
-          wrapper.className = 'px-0.5';
+          wrapper.className = inCampaign ? 'px-0.5' : '';
 
-          const settings = (appData.appearance && appData.appearance.banners && appData.appearance.banners[inCampaign ? 'campaign' : 'outside']) || {};
-          const background = settings.color || (inCampaign ? '#6d28d9' : '#cbd5e1');
+          if (!inCampaign) {
+            row.appendChild(wrapper);
+            index = end + 1;
+            continue;
+          }
+
+          const settings = (appData.appearance && appData.appearance.banners && appData.appearance.banners.campaign) || {};
+          const background = settings.color || '#6d28d9';
 
           const bar = document.createElement('div');
           bar.className = 'rounded-lg px-2 py-0.5 flex items-center justify-center overflow-hidden shadow-sm';
@@ -1547,10 +1549,7 @@
           bar.style.color = bannerContrastColor(background);
           if (settings.fontFamily && settings.fontFamily !== '__system') bar.style.fontFamily = settings.fontFamily;
           bar.style.fontSize = `${settings.fontSize || 10}px`;
-          if (!inCampaign) bar.style.border = '1px dashed rgba(15, 23, 42, 0.25)';
-          bar.title = inCampaign
-            ? `${location ? location.name : 'Campanha'}: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)} (${span} dia${span > 1 ? 's' : ''})`
-            : `Fora da campanha: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)}`;
+          bar.title = `${location ? location.name : 'Campanha'}: ${formatHumanDate(days[index].fullDate)} a ${formatHumanDate(days[end].fullDate)} (${span} dia${span > 1 ? 's' : ''})`;
 
           const label = document.createElement('span');
           label.className = 'font-bold truncate';
@@ -3354,7 +3353,8 @@
         showToast('Aparência aplicada.', 'success');
       }
 
-      document.getElementById('appearance-banner-target').onchange = () => renderAppearanceControls();
+      const bannerTargetSelect = document.getElementById('appearance-banner-target');
+      if (bannerTargetSelect) bannerTargetSelect.onchange = () => renderAppearanceControls();
       document.getElementById('appearance-banner-color').oninput = () => {
         document.getElementById('appearance-banner-color-label').textContent = document.getElementById('appearance-banner-color').value;
         renderBannerPreview();
