@@ -474,11 +474,11 @@
             </div>
             <div class="space-y-2">
               <label for="email-from" class="block text-[11px] font-bold text-slate-700">Email da campanha (resposta)</label>
-              <input id="email-from" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="campanha@exemplo.pt">
+              <input id="email-from" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="portugal@creactivitybus.com">
             </div>
             <div class="space-y-2">
               <label for="email-notify-to" class="block text-[11px] font-bold text-slate-700">Email da campanha (receber reservas)</label>
-              <input id="email-notify-to" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="reservas@exemplo.pt">
+              <input id="email-notify-to" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="portugal@creactivitybus.com">
               <label class="flex items-center gap-2 text-[11px] font-semibold text-slate-600">
                 <input id="email-notify-enabled" type="checkbox" class="h-3.5 w-3.5 accent-indigo-600">
                 Enviar também uma notificação para este endereço
@@ -863,7 +863,7 @@
           }
         },
         adminPinHash: '',
-        email: { enabled: false, serviceId: '', templateId: '', publicKey: '', fromName: '', fromEmail: '', subject: '', notifyEnabled: false, notifyTo: '' },
+        email: { enabled: false, serviceId: '', templateId: '', publicKey: '', fromName: '', fromEmail: 'portugal@creactivitybus.com', subject: '', notifyEnabled: true, notifyTo: 'portugal@creactivitybus.com' },
         branding: {
           logoEmoji: '🎓',
           logoImage: '',
@@ -988,10 +988,10 @@
             templateId: emailText('templateId'),
             publicKey: emailText('publicKey'),
             fromName: emailText('fromName'),
-            fromEmail: emailText('fromEmail'),
+            fromEmail: emailText('fromEmail') || 'portugal@creactivitybus.com',
             subject: emailText('subject'),
-            notifyEnabled: email.notifyEnabled === true,
-            notifyTo: emailText('notifyTo')
+            notifyEnabled: email.notifyEnabled !== false,
+            notifyTo: emailText('notifyTo') || 'portugal@creactivitybus.com'
           };
 
           const branding = parsed.branding && typeof parsed.branding === 'object' ? parsed.branding : {};
