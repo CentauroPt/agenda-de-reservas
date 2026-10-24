@@ -46,6 +46,10 @@ module.exports = async (req, res) => {
         if (!body[field]) return res.status(400).json({ error: `campo obrigatorio: ${field}` });
       }
 
+      if (process.env.VERCEL && !process.env.KV_REST_API_URL) {
+        return res.status(503).json({ error: 'base de dados nao configurada (KV_REST_API_URL/KV_REST_API_TOKEN)' });
+      }
+
       const list = await store.readAll();
       const duplicate = list.find((item) => item.locationId === body.locationId
         && item.date === body.date
