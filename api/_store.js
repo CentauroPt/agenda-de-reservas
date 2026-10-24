@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const KV_URL = process.env.KV_REST_API_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN;
+const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 const FILE = path.join(process.cwd(), '.data', 'bookings.json');
 
 async function kv(command) {
