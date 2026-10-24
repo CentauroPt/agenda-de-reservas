@@ -19,7 +19,8 @@ grupos escolares e painel de administração com horários, durações, localida
   número de alunos (1–25), ano frequentado e programa da Fundação "la Caixa".
 
 **Painel de administração**
-- Horário semanal por defeito (manhã/tarde com duração base de 30–180 minutos).
+- **Horário semanal por dia da semana** (segunda a sexta): cada dia tem os seus horários com início e
+  fim editáveis, exatamente como no Google Calendar.
 - **Ajustes por data**: cada dia pode ter os seus próprios horários (09:00–10:15, 10:15–11:30, …), com
   adicionar/remover por dia; o calendário mostra exatamente o que está definido em cada data.
 - **Copiar horário** de um dia para todos os dias úteis de um intervalo.
@@ -116,10 +117,13 @@ Os dados ficam no navegador, em `localStorage`, sob a chave `campanha_pt_v3`:
     { "id": "loc-...", "name": "71.Torres Vedras", "startDate": "2026-10-26", "endDate": "2026-11-23" }
   ],
   "selectedLocation": 0,
-  "morningDuration": 94,
-  "morningSessions": ["09:00", "10:49", "12:38"],
-  "afternoonDuration": 60,
-  "afternoonSessions": ["14:30", "15:45"],
+  "weeklySlots": {
+    "1": [{ "start": "09:00", "end": "10:15" }, { "start": "10:15", "end": "11:30" }],
+    "2": [{ "start": "09:00", "end": "10:15" }],
+    "3": [],
+    "4": [{ "start": "09:00", "end": "10:15" }],
+    "5": [{ "start": "09:00", "end": "10:15" }]
+  },
   "dateSlots": {
     "2026-10-28": [
       { "start": "08:00", "end": "08:45" },
@@ -149,6 +153,8 @@ Os dados ficam no navegador, em `localStorage`, sob a chave `campanha_pt_v3`:
   }
 }
 ```
+
+O horário antigo (manhã/tarde + duração) é convertido automaticamente no horário por dia da semana.
 
 As chaves de reserva passaram a usar o `id` da campanha (e não o nome), para que renomear uma
 localidade não perca reservas. Dados de versões anteriores, guardados por nome, são migrados
