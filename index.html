@@ -25,6 +25,13 @@
       cursor: move;
       user-select: none;
     }
+    .admin-window .win-handle::before {
+      content: "⠿";
+      margin-right: 6px;
+      opacity: 0.3;
+      font-weight: 400;
+      letter-spacing: -1px;
+    }
     .admin-window.is-dragging {
       box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
       z-index: 60;
@@ -2761,11 +2768,18 @@
           card.classList.add('admin-window');
           applyWindowGeometry(card, layout);
 
-          const handle = card.querySelector('h2, h3');
-          if (handle) {
-            handle.classList.add('win-handle');
-            handle.setAttribute('title', 'Arraste para mover · puxa o canto inferior direito para redimensionar');
-            attachWindowDrag(card, handle);
+          const title = card.querySelector('h2, h3');
+          if (title) {
+            const handles = [title];
+            if (title.parentElement && title.parentElement !== card) handles.push(title.parentElement);
+            const headerRow = title.closest('.border-b');
+            if (headerRow && headerRow !== card && handles.indexOf(headerRow) === -1) handles.push(headerRow);
+
+            handles.forEach((handle) => {
+              handle.classList.add('win-handle');
+              handle.setAttribute('title', 'Arraste para mover · puxa o canto inferior direito para redimensionar');
+              attachWindowDrag(card, handle);
+            });
           }
 
           if (window.ResizeObserver) {
