@@ -33,7 +33,7 @@
         <span class="text-2xl shrink-0">🎓</span>
         <div class="min-w-0">
           <h1 class="font-bold text-slate-900 leading-tight text-sm sm:text-base truncate">Campanha Educativa PT</h1>
-          <span class="hidden sm:block text-xs text-slate-500">Fundação "la Caixa" • Reservas Creactivity (demonstração local)</span>
+          <span class="hidden sm:block text-xs text-slate-500">Fundação "la Caixa" • Reservas Creactivity</span>
         </div>
       </div>
       <nav class="flex space-x-1 sm:space-x-2 bg-slate-100 p-1 rounded-xl shrink-0">
@@ -49,15 +49,10 @@
       <div class="flex flex-col lg:flex-row lg:items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm gap-4">
         <div>
           <h2 class="text-lg font-bold text-slate-900">Selecione uma Sessão para Reservar</h2>
-          <p class="text-xs text-slate-500">Clique numa sessão disponível (azul) para abrir o formulário. Sessões passadas, já reservadas ou fora das datas da campanha estão bloqueadas.</p>
         </div>
         <div class="flex flex-wrap items-center gap-2">
           <select id="location-select" aria-label="Campanha" class="px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 bg-white"></select>
           <span id="campaign-range-label" class="hidden text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg"></span>
-          <div id="google-sync-badge" title="Demonstração: não existe ligação real à API do Google Calendar" class="flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 text-xs font-bold">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Google Calendar</span>
-          </div>
           <div class="flex items-center space-x-1">
             <button id="btn-prev-week" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◄</button>
             <button id="btn-today" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">Hoje</button>
@@ -78,7 +73,7 @@
                 <span class="bg-purple-900 px-1.5 py-0.5 rounded text-[10px]">PT</span>
                 <span id="week-location-title">--</span>
               </div>
-              <span class="text-[10px] bg-purple-600 px-2 py-0.5 rounded text-purple-100 font-normal">Demonstração • dados guardados neste navegador</span>
+              <span class="text-[10px] bg-purple-600 px-2 py-0.5 rounded text-purple-100 font-normal">Dados guardados neste navegador</span>
             </div>
             <div class="col-span-2 text-xs text-slate-400 font-semibold px-2 py-1 flex items-center justify-center">
               Fim de Semana (Sem Atividade)
