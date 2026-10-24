@@ -199,6 +199,25 @@
       </div>
     </div>
 
+    <!-- DETALHE DA RESERVA -->
+    <div id="booking-detail-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 border border-slate-200" role="dialog" aria-modal="true" aria-labelledby="booking-detail-title">
+        <div class="flex justify-between items-start border-b pb-3">
+          <div class="min-w-0">
+            <span class="text-[10px] font-extrabold uppercase bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full">Registo de reserva</span>
+            <h3 id="booking-detail-title" class="text-lg font-extrabold text-slate-900 mt-1 truncate">--</h3>
+            <p id="booking-detail-subtitle" class="text-xs text-slate-500">--</p>
+          </div>
+          <button id="btn-close-detail" class="text-slate-400 hover:text-slate-700 text-2xl font-bold shrink-0" aria-label="Fechar">&times;</button>
+        </div>
+        <dl id="booking-detail-body" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-xs"></dl>
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-3 border-t">
+          <button id="btn-detail-cancel" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-bold">Cancelar reserva</button>
+          <button id="btn-detail-close" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold">Fechar</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ADMIN -->
     <section id="page-admin" class="hidden space-y-6">
       <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -1693,7 +1712,17 @@
         entries.forEach((entry) => {
           const booking = entry.booking;
           const row = document.createElement('tr');
-          row.className = 'hover:bg-slate-50';
+          row.className = 'hover:bg-slate-100 cursor-pointer';
+          row.tabIndex = 0;
+          row.setAttribute('role', 'button');
+          row.setAttribute('aria-label', `Ver dados da reserva de ${booking.schoolName || 'escola'} em ${formatHumanDate(entry.date)}`);
+          row.onclick = () => openBookingDetails(entry);
+          row.onkeydown = (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              openBookingDetails(entry);
+            }
+          };
 
           const cells = [
             formatHumanDate(entry.date),
@@ -1722,7 +1751,10 @@
           cancelBtn.className = 'text-rose-600 font-bold hover:underline';
           cancelBtn.textContent = 'Cancelar';
           cancelBtn.setAttribute('aria-label', `Cancelar reserva de ${booking.schoolName || 'escola'} em ${formatHumanDate(entry.date)}`);
-          cancelBtn.onclick = () => cancelBooking(entry);
+          cancelBtn.onclick = (event) => {
+            event.stopPropagation();
+            cancelBooking(entry);
+          };
           actionCell.appendChild(cancelBtn);
           row.appendChild(actionCell);
 
@@ -1948,7 +1980,9 @@
       document.getElementById('btn-cancel-modal').onclick = closeModal;
       modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
       document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+        if (event.key !== 'Escape') return;
+        if (!detailModal.classList.contains('hidden')) closeBookingDetails();
+        else if (!modal.classList.contains('hidden')) closeModal();
       });
 
       document.getElementById('radio-la-yes').onchange = () => {
@@ -2365,6 +2399,90 @@
 
         applyOverrideChange();
         showToast(`${count} dia(s) com o horário de ${formatHumanDate(source)}.`, 'success');
+      };
+
+      const detailModal = document.getElementById('booking-detail-modal');
+      let detailEntry = null;
+
+      function openBookingDetails(entry) {
+        detailEntry = entry;
+        const booking = entry.booking || {};
+
+        document.getElementById('booking-detail-title').textContent = booking.schoolName || 'Escola';
+        document.getElementById('booking-detail-subtitle').textContent =
+          `${formatHumanDate(entry.date)} · ${booking.sessionStart || entry.start} – ${booking.sessionEnd || ''} · ${entry.locationName}`;
+
+        const rows = [
+          ['Escola', booking.schoolName],
+          ['Nº de alunos', booking.students],
+          ['Ano frequentado', booking.grade],
+          ['Responsável', `${booking.firstName || ''} ${booking.lastName || ''}`.trim()],
+          ['E-mail', booking.email, 'mailto'],
+          ['Telemóvel', booking.phone, 'tel'],
+          ['Acompanhante', booking.companionName],
+          ['Telemóvel do acompanhante', booking.companionPhone, 'tel'],
+          ['Fundação la Caixa', booking.laCaixa === 'Sim' ? `Sim — ${booking.laCaixaDetails || 'sem detalhe'}` : (booking.laCaixa || '—')],
+          ['Duração', booking.duration ? `${booking.duration} min` : '—'],
+          ['Registado em', booking.createdAt ? new Date(booking.createdAt).toLocaleString('pt-PT') : '—']
+        ];
+
+        const body = document.getElementById('booking-detail-body');
+        body.innerHTML = '';
+
+        rows.forEach((row) => {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'border-b border-slate-100 pb-1.5';
+
+          const term = document.createElement('dt');
+          term.className = 'text-[10px] font-bold uppercase text-slate-400';
+          term.textContent = row[0];
+
+          const value = document.createElement('dd');
+          value.className = 'text-slate-800 font-semibold break-words';
+
+          const raw = row[1];
+          if (raw === null || raw === undefined || raw === '') {
+            value.textContent = '—';
+          } else if (row[2] === 'mailto') {
+            const link = document.createElement('a');
+            link.href = `mailto:${raw}`;
+            link.className = 'text-indigo-600 underline';
+            link.textContent = raw;
+            value.appendChild(link);
+          } else if (row[2] === 'tel') {
+            const link = document.createElement('a');
+            link.href = `tel:${String(raw).replace(/\s/g, '')}`;
+            link.className = 'text-indigo-600 underline';
+            link.textContent = raw;
+            value.appendChild(link);
+          } else {
+            value.textContent = String(raw);
+          }
+
+          wrapper.appendChild(term);
+          wrapper.appendChild(value);
+          body.appendChild(wrapper);
+        });
+
+        detailModal.classList.remove('hidden');
+        setTimeout(() => document.getElementById('btn-close-detail').focus(), 30);
+      }
+
+      function closeBookingDetails() {
+        detailModal.classList.add('hidden');
+        detailEntry = null;
+      }
+
+      document.getElementById('btn-close-detail').onclick = closeBookingDetails;
+      document.getElementById('btn-detail-close').onclick = closeBookingDetails;
+      detailModal.addEventListener('click', (event) => {
+        if (event.target === detailModal) closeBookingDetails();
+      });
+      document.getElementById('btn-detail-cancel').onclick = () => {
+        if (!detailEntry) return;
+        const entry = detailEntry;
+        cancelBooking(entry);
+        closeBookingDetails();
       };
 
       document.getElementById('btn-export-csv').onclick = exportCsv;
