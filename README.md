@@ -30,6 +30,8 @@ grupos escolares e painel de administração com horários, durações, localida
 - Campanhas (localidades) com data de início e de fim; o calendário bloqueia datas fora do intervalo.
 - Reservas registadas: listagem, contagem de alunos, cancelamento individual e **exportação CSV**
   (separador `;` e BOM, pronta para Excel).
+- **Janelas arrastáveis e redimensionáveis** no painel: arrastar pela barra de título, redimensionar pelo
+  canto inferior direito; a disposição fica guardada e há o botão **Repor janelas**.
 - Reinício dos dados locais.
 
 ## Como usar

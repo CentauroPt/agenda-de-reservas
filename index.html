@@ -15,6 +15,20 @@
       display: grid;
       grid-template-columns: 60px repeat(7, minmax(130px, 1fr));
     }
+    .admin-window {
+      resize: both;
+      overflow: auto;
+      min-width: 240px;
+      min-height: 140px;
+    }
+    .admin-window .win-handle {
+      cursor: move;
+      user-select: none;
+    }
+    .admin-window.is-dragging {
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+      z-index: 60;
+    }
     .cal-event {
       transition: box-shadow 0.15s ease, filter 0.15s ease;
     }
@@ -186,6 +200,7 @@
           <p class="text-xs text-slate-400 mt-1">Definição de horários, campanhas, reservas e exportação de dados.</p>
         </div>
         <div class="flex flex-wrap gap-2">
+          <button id="btn-reset-windows" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold shadow-md">🪟 Repor janelas</button>
           <button id="btn-reset-data" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md">
             🗑️ Limpar Dados Locais
           </button>
@@ -2614,6 +2629,7 @@
         if (!isMain) {
           fillGoogleUi();
           renderGoogleConnection();
+          initAdminWindows();
         }
       }
 
@@ -2625,6 +2641,165 @@
       document.getElementById('btn-google-test').onclick = testGoogle;
       document.getElementById('btn-google-export').onclick = exportGoogleBookings;
 
+      /* ---------- janelas arrastaveis do painel ---------- */
+
+      const WINDOW_STORAGE_KEY = 'agenda_admin_windows_v1';
+      let windowZ = 10;
+
+      function loadWindowLayout() {
+        try {
+          return JSON.parse(localStorage.getItem(WINDOW_STORAGE_KEY)) || {};
+        } catch (error) {
+          return {};
+        }
+      }
+
+      function persistWindowLayout(layout) {
+        try {
+          localStorage.setItem(WINDOW_STORAGE_KEY, JSON.stringify(layout));
+        } catch (error) { /* ignora */ }
+      }
+
+      function collectAdminWindows() {
+        const views = [
+          { element: document.getElementById('admin-main-view'), prefix: 'main' },
+          { element: document.getElementById('admin-google-view'), prefix: 'google' }
+        ];
+        const windows = [];
+
+        views.forEach((view) => {
+          if (!view.element) return;
+          const found = [];
+
+          const walk = (node) => {
+            Array.from(node.children).forEach((child) => {
+              if (child.classList.contains('bg-white') && child.classList.contains('rounded-2xl')) {
+                found.push(child);
+                return;
+              }
+              walk(child);
+            });
+          };
+
+          walk(view.element);
+          found.forEach((card, index) => {
+            card.dataset.winKey = `${view.prefix}-${index}`;
+            windows.push(card);
+          });
+        });
+
+        return windows;
+      }
+
+      function readWindowOffset(card) {
+        const match = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(card.style.transform || '');
+        return match ? { x: parseFloat(match[1]), y: parseFloat(match[2]) } : { x: 0, y: 0 };
+      }
+
+      function applyWindowGeometry(card, layout) {
+        const saved = layout[card.dataset.winKey];
+        if (!saved) return;
+        if (Number.isFinite(saved.x) || Number.isFinite(saved.y)) {
+          card.style.transform = `translate(${saved.x || 0}px, ${saved.y || 0}px)`;
+        }
+        if (window.innerWidth >= 1024) {
+          if (Number.isFinite(saved.w) && saved.w > 200) card.style.width = saved.w + 'px';
+          if (Number.isFinite(saved.h) && saved.h > 120) card.style.height = saved.h + 'px';
+        }
+      }
+
+      function attachWindowDrag(card, handle) {
+        let startX = 0;
+        let startY = 0;
+        let baseX = 0;
+        let baseY = 0;
+        let dragging = false;
+
+        handle.addEventListener('pointerdown', (event) => {
+          if (event.button !== 0) return;
+          if (event.target.closest('button, a, input, select, textarea')) return;
+
+          dragging = true;
+          startX = event.clientX;
+          startY = event.clientY;
+          const base = readWindowOffset(card);
+          baseX = base.x;
+          baseY = base.y;
+          card.classList.add('is-dragging');
+          card.style.zIndex = String(++windowZ);
+          try { handle.setPointerCapture(event.pointerId); } catch (error) { /* ignora */ }
+          event.preventDefault();
+        });
+
+        handle.addEventListener('pointermove', (event) => {
+          if (!dragging) return;
+          const x = baseX + (event.clientX - startX);
+          const y = baseY + (event.clientY - startY);
+          card.style.transform = `translate(${x}px, ${y}px)`;
+        });
+
+        const finish = () => {
+          if (!dragging) return;
+          dragging = false;
+          card.classList.remove('is-dragging');
+          const offset = readWindowOffset(card);
+          const layout = loadWindowLayout();
+          layout[card.dataset.winKey] = Object.assign({}, layout[card.dataset.winKey], { x: offset.x, y: offset.y });
+          persistWindowLayout(layout);
+        };
+
+        handle.addEventListener('pointerup', finish);
+        handle.addEventListener('pointercancel', finish);
+      }
+
+      function initAdminWindows() {
+        const layout = loadWindowLayout();
+
+        collectAdminWindows().forEach((card) => {
+          if (card.dataset.winReady === '1') return;
+          card.dataset.winReady = '1';
+          card.classList.add('admin-window');
+          applyWindowGeometry(card, layout);
+
+          const handle = card.querySelector('h2, h3');
+          if (handle) {
+            handle.classList.add('win-handle');
+            handle.setAttribute('title', 'Arraste para mover · puxa o canto inferior direito para redimensionar');
+            attachWindowDrag(card, handle);
+          }
+
+          if (window.ResizeObserver) {
+            let timer = null;
+            const observer = new ResizeObserver(() => {
+              clearTimeout(timer);
+              timer = setTimeout(() => {
+                const rect = card.getBoundingClientRect();
+                if (rect.width < 200 || rect.height < 120) return;
+                const current = loadWindowLayout();
+                current[card.dataset.winKey] = Object.assign({}, current[card.dataset.winKey], {
+                  w: Math.round(rect.width),
+                  h: Math.round(rect.height)
+                });
+                persistWindowLayout(current);
+              }, 350);
+            });
+            observer.observe(card);
+          }
+        });
+      }
+
+      function resetAdminWindows() {
+        localStorage.removeItem(WINDOW_STORAGE_KEY);
+        document.querySelectorAll('.admin-window').forEach((card) => {
+          card.style.transform = '';
+          card.style.width = '';
+          card.style.height = '';
+        });
+        showToast('Janelas repostas.', 'success');
+      }
+
+      document.getElementById('btn-reset-windows').onclick = resetAdminWindows;
+
       loadState();
       renderLocationSelect();
       renderAdminLocations();
@@ -2633,6 +2808,7 @@
       renderBookings();
       fillGoogleUi();
       renderGoogleConnection();
+      initAdminWindows();
       jumpToLocationStart(currentLocation());
       renderCalendar();
     })();
