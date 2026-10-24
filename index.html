@@ -1,0 +1,1602 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campanha Educativa PT · Reservas Creactivity</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: 60px repeat(7, minmax(130px, 1fr));
+    }
+    input:focus-visible,
+    select:focus-visible,
+    button:focus-visible,
+    [role="button"]:focus-visible,
+    [tabindex]:focus-visible {
+      outline: 2px solid #4f46e5;
+      outline-offset: 1px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans antialiased">
+
+  <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4 min-h-16 py-2 flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+        <span class="text-2xl shrink-0">🎓</span>
+        <div class="min-w-0">
+          <h1 class="font-bold text-slate-900 leading-tight text-sm sm:text-base truncate">Campanha Educativa PT</h1>
+          <span class="hidden sm:block text-xs text-slate-500">Fundação "la Caixa" • Reservas Creactivity (demonstração local)</span>
+        </div>
+      </div>
+      <nav class="flex space-x-1 sm:space-x-2 bg-slate-100 p-1 rounded-xl shrink-0">
+        <button id="btn-show-public" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm"><span class="hidden sm:inline">📅 Calendário de Reservas</span><span class="sm:hidden">📅 Calendário</span></button>
+        <button id="btn-show-admin" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900"><span class="hidden sm:inline">⚙️ Painel Administrador</span><span class="sm:hidden">⚙️ Admin</span></button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl w-full mx-auto p-4 sm:p-6 flex-grow">
+
+    <section id="page-public" class="space-y-4">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">Selecione uma Sessão para Reservar</h2>
+          <p class="text-xs text-slate-500">Clique numa sessão disponível (azul) para abrir o formulário. Sessões passadas, já reservadas ou fora das datas da campanha estão bloqueadas.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <select id="location-select" aria-label="Campanha" class="px-3 py-2 text-xs font-bold rounded-lg border border-slate-200 bg-white"></select>
+          <span id="campaign-range-label" class="hidden text-[10px] font-bold text-slate-600 bg-slate-50 border border-slate-200 px-2 py-1 rounded-lg"></span>
+          <div id="google-sync-badge" title="Demonstração: não existe ligação real à API do Google Calendar" class="flex items-center space-x-1.5 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-lg border border-emerald-200 text-xs font-bold">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Google Calendar</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <button id="btn-prev-week" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">◄</button>
+            <button id="btn-today" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">Hoje</button>
+            <span id="current-week-label" class="text-xs font-extrabold px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">-- / --</span>
+            <button id="btn-next-week" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-bold">►</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="calendar-warning" aria-live="polite" class="hidden bg-amber-50 border border-amber-200 text-amber-800 text-xs font-semibold px-4 py-2 rounded-xl"></div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto p-4">
+        <div class="min-w-[900px]">
+          <div class="calendar-grid mb-2">
+            <div></div>
+            <div class="col-span-5 bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-sm flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="bg-purple-900 px-1.5 py-0.5 rounded text-[10px]">PT</span>
+                <span id="week-location-title">--</span>
+              </div>
+              <span class="text-[10px] bg-purple-600 px-2 py-0.5 rounded text-purple-100 font-normal">Demonstração • dados guardados neste navegador</span>
+            </div>
+            <div class="col-span-2 text-xs text-slate-400 font-semibold px-2 py-1 flex items-center justify-center">
+              Fim de Semana (Sem Atividade)
+            </div>
+          </div>
+
+          <div id="calendar-header-grid" class="calendar-grid border-b border-slate-200 pb-2 text-center">
+            <div class="text-[10px] font-bold text-slate-400 pt-3">HORA</div>
+          </div>
+
+          <div id="calendar-body-grid" class="calendar-grid pt-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODAL -->
+    <div id="booking-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 border border-slate-200" role="dialog" aria-modal="true" aria-labelledby="booking-modal-title">
+        <div class="flex justify-between items-start border-b pb-3">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full">Sessão Selecionada</span>
+            <h3 id="booking-modal-title" class="text-xl font-extrabold text-slate-900 mt-1">Reservas Ateliers Creactivity</h3>
+            <p class="text-xs text-slate-500" id="modal-session-subtitle">--</p>
+          </div>
+          <button id="btn-close-modal" class="text-slate-400 hover:text-slate-700 text-2xl font-bold" aria-label="Fechar">&times;</button>
+        </div>
+
+        <form id="modal-booking-form" class="space-y-3" novalidate>
+          <p class="text-xs font-bold text-slate-400 uppercase">Preencha os dados do registo:</p>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="field-first-name" class="block text-[11px] font-bold text-slate-700 mb-1">Nome *</label>
+              <input type="text" id="field-first-name" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+            <div>
+              <label for="field-last-name" class="block text-[11px] font-bold text-slate-700 mb-1">Apelido *</label>
+              <input type="text" id="field-last-name" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="field-email" class="block text-[11px] font-bold text-slate-700 mb-1">E-mail de Confirmação *</label>
+              <input type="email" id="field-email" autocomplete="email" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+            <div>
+              <label for="field-phone" class="block text-[11px] font-bold text-slate-700 mb-1">Telemóvel PT (+351) *</label>
+              <input type="tel" id="field-phone" autocomplete="tel" inputmode="numeric" required placeholder="912345678" class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="field-companion-name" class="block text-[11px] font-bold text-slate-700 mb-1">Nome Acompanhante *</label>
+              <input type="text" id="field-companion-name" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+            <div>
+              <label for="field-companion-phone" class="block text-[11px] font-bold text-slate-700 mb-1">Telemóvel Acompanhante *</label>
+              <input type="tel" id="field-companion-phone" autocomplete="tel" inputmode="numeric" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+          </div>
+
+          <div>
+            <label for="field-school-name" class="block text-[11px] font-bold text-slate-700 mb-1">Nome da Escola *</label>
+            <input type="text" id="field-school-name" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label for="field-students" class="block text-[11px] font-bold text-slate-700 mb-1">Nº de Alunos (Máx. 25) *</label>
+              <input type="number" id="field-students" max="25" min="1" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs">
+            </div>
+            <div>
+              <label for="field-grade" class="block text-[11px] font-bold text-slate-700 mb-1">Ano Frequentado *</label>
+              <input type="text" id="field-grade" required class="w-full p-2 bg-slate-50 border rounded-lg text-xs" placeholder="Ex: 4º Ano">
+            </div>
+          </div>
+
+          <div class="p-3 bg-indigo-50/60 border border-indigo-100 rounded-xl space-y-2 text-xs" role="radiogroup" aria-labelledby="lacaixa-question">
+            <p id="lacaixa-question" class="font-bold text-slate-800">O grupo está inscrito em algum programa social da Fundação "la Caixa"? *</p>
+            <div class="flex space-x-4">
+              <label class="flex items-center space-x-1 cursor-pointer">
+                <input type="radio" name="lacaixa" value="Sim" required id="radio-la-yes">
+                <span>Sim</span>
+              </label>
+              <label class="flex items-center space-x-1 cursor-pointer">
+                <input type="radio" name="lacaixa" value="Não" id="radio-la-no">
+                <span>Não</span>
+              </label>
+            </div>
+            <input type="text" id="field-la-details" aria-label="Qual o programa da Fundação la Caixa" placeholder="Se sim, qual?" class="hidden w-full p-2 bg-white border rounded text-xs mt-2">
+          </div>
+
+          <div class="flex justify-end space-x-2 pt-3 border-t">
+            <button type="button" id="btn-cancel-modal" class="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800">Cancelar</button>
+            <button type="submit" class="px-5 sm:px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md whitespace-nowrap">
+              Confirmar e Agendar Reserva ➔
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ADMIN -->
+    <section id="page-admin" class="hidden space-y-6">
+      <div class="bg-slate-900 text-white p-6 rounded-2xl shadow-md flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <h2 class="text-2xl font-extrabold">⚙️ Painel de Administração</h2>
+          <p class="text-xs text-slate-400 mt-1">Definição de horários, replicação de datas e sincronização.</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btn-trigger-google-sync" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-2 shadow-md">
+            <span>🔄</span> <span>Simular Alteração Google Calendar</span>
+          </button>
+          <button id="btn-reset-data" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold shadow-md">
+            🗑️ Limpar Dados Locais
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- COLUNA ESQUERDA: Agrupamento de Lógica de Tempo -->
+        <div class="space-y-6">
+          
+          <!-- HORÁRIOS -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex items-center space-x-2">
+              <span>⏱️</span> <span>Horários das Sessões</span>
+            </h3>
+            
+            <div class="space-y-4">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <span class="text-xs font-bold text-indigo-700 uppercase">🌅 Manhã</span>
+                  <button type="button" id="btn-add-morning" class="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2 py-1 rounded transition-colors">+ Adicionar Hora</button>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600 mb-1">Duração base (minutos):</label>
+                  <input type="number" id="admin-morning-min-input" value="94" min="30" max="180" class="w-full p-2 border rounded-lg text-xs font-bold bg-white">
+                </div>
+                <div id="admin-morning-list" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+                <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+                  <span class="text-xs font-bold text-indigo-700 uppercase">☀️ Tarde</span>
+                  <button type="button" id="btn-add-afternoon" class="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold px-2 py-1 rounded transition-colors">+ Adicionar Hora</button>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-slate-600 mb-1">Duração base (minutos):</label>
+                  <input type="number" id="admin-afternoon-min-input" value="60" min="30" max="180" class="w-full p-2 border rounded-lg text-xs font-bold bg-white">
+                </div>
+                <div id="admin-afternoon-list" class="space-y-2 max-h-56 overflow-y-auto pr-1"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- REPLICAR -->
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 border-l-4 border-l-indigo-500">
+            <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex items-center space-x-2">
+              <span>🔄</span> <span>Replicar Horários (Sincronização)</span>
+            </h3>
+            <p class="text-xs text-slate-500">Aplica as horas de início e a duração atuais a todos os dias úteis do intervalo indicado. Simulação local, sem ligação ao Google Calendar.</p>
+            
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Início:</label>
+                <input type="date" id="admin-replicate-start" class="w-full p-2 border rounded-lg text-xs font-bold">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">Data de Fim:</label>
+                <input type="date" id="admin-replicate-end" class="w-full p-2 border rounded-lg text-xs font-bold">
+              </div>
+            </div>
+            
+            <button id="btn-execute-batch" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all">
+              ⚡ Executar Replicação (simulação)
+            </button>
+          </div>
+
+        </div>
+
+        <!-- COLUNA DIREITA: Localidades -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col h-fit">
+          <h3 class="font-bold text-sm text-slate-800 border-b pb-2 flex items-center space-x-2">
+            <span>📍</span> <span>Campanhas (Localidades)</span>
+          </h3>
+          
+          <!-- FORMULÁRIO MOVIDO PARA O TOPO -->
+          <div class="pb-3 border-b border-slate-100 space-y-2">
+            <p class="text-[11px] font-bold text-slate-500 uppercase">Adicionar Nova Campanha</p>
+            <input type="text" id="admin-new-location-input" placeholder="Nome da Localidade..." class="w-full p-2 border rounded-lg text-xs">
+            <div class="flex space-x-2">
+              <div class="flex-1">
+                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Data Início</label>
+                <input type="date" id="admin-new-location-start" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+              <div class="flex-1">
+                <label class="block text-[10px] font-semibold text-slate-500 mb-1">Data Fim</label>
+                <input type="date" id="admin-new-location-end" class="w-full p-2 border rounded-lg text-xs">
+              </div>
+            </div>
+            <button id="btn-add-location" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-lg shadow-sm mt-2">Adicionar Campanha</button>
+          </div>
+
+          <!-- LISTA DE LOCALIDADES -->
+          <div id="admin-locations-container" class="space-y-3 flex-grow overflow-y-auto max-h-[350px] pr-1"></div>
+          
+        </div>
+
+      </div>
+
+      <!-- RESERVAS -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-5 border-b border-slate-100">
+          <div>
+            <h3 class="font-bold text-sm text-slate-800 flex items-center space-x-2">
+              <span>📋</span> <span>Reservas Registadas</span>
+            </h3>
+            <p id="bookings-summary" class="text-xs text-slate-500 mt-1">Ainda não existem reservas registadas.</p>
+          </div>
+          <button type="button" id="btn-export-csv" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md whitespace-nowrap">
+            ⬇️ Exportar CSV
+          </button>
+        </div>
+        <div class="overflow-x-auto max-h-[420px]">
+          <table class="w-full text-left text-[11px]">
+            <thead class="bg-slate-50 text-slate-500 uppercase text-[10px] sticky top-0">
+              <tr>
+                <th scope="col" class="px-4 py-2 font-bold">Data</th>
+                <th scope="col" class="px-4 py-2 font-bold">Hora</th>
+                <th scope="col" class="px-4 py-2 font-bold">Campanha</th>
+                <th scope="col" class="px-4 py-2 font-bold">Escola</th>
+                <th scope="col" class="px-4 py-2 font-bold">Alunos</th>
+                <th scope="col" class="px-4 py-2 font-bold">Responsável</th>
+                <th scope="col" class="px-4 py-2 font-bold">Contacto</th>
+                <th scope="col" class="px-4 py-2 font-bold">la Caixa</th>
+                <th scope="col" class="px-4 py-2 font-bold text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="bookings-tbody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const STORAGE_KEY = 'campanha_pt_v3';
+      const MAX_STUDENTS = 25;
+      const MIN_DURATION = 30;
+      const MAX_DURATION = 180;
+      const PT_PHONE_RE = /^\d{9}$/;
+      const WEEKDAY_LABELS = ['Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'];
+
+      const pad = (n) => String(n).padStart(2, '0');
+
+      function formatDate(date) {
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      }
+
+      function parseISODate(value) {
+        if (typeof value !== 'string') return null;
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+        if (!match) return null;
+        const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+        return Number.isNaN(date.getTime()) ? null : date;
+      }
+
+      function formatHumanDate(value) {
+        const date = parseISODate(value);
+        return date ? `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()}` : '—';
+      }
+
+      function todayISO() {
+        return formatDate(new Date());
+      }
+
+      function addDaysISO(days) {
+        const date = new Date();
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + days);
+        return formatDate(date);
+      }
+
+      let idSeq = 0;
+      function makeLocationId() {
+        return `loc-${Date.now().toString(36)}-${(idSeq++).toString(36)}`;
+      }
+
+      function createDefaultLocations() {
+        return [
+          { id: makeLocationId(), name: '71.Torres Vedras', startDate: addDaysISO(0), endDate: addDaysISO(30) },
+          { id: makeLocationId(), name: 'Lisboa - Pavilhão do Conhecimento', startDate: addDaysISO(30), endDate: addDaysISO(60) },
+          { id: makeLocationId(), name: 'Porto - Planetário', startDate: addDaysISO(60), endDate: addDaysISO(90) }
+        ];
+      }
+
+      const defaultState = {
+        morningDuration: 94,
+        morningSessions: ['09:00', '10:49', '12:38'],
+        afternoonDuration: 60,
+        afternoonSessions: ['14:30', '15:45']
+      };
+
+      const appData = {
+        locations: createDefaultLocations(),
+        selectedLocation: 0,
+        morningDuration: defaultState.morningDuration,
+        morningSessions: defaultState.morningSessions.slice(),
+        afternoonDuration: defaultState.afternoonDuration,
+        afternoonSessions: defaultState.afternoonSessions.slice(),
+        bookings: {},
+        currentWeekOffset: 0,
+        selectedSession: null
+      };
+
+      /* ---------- tempo ---------- */
+
+      function isValidTime(value) {
+        return typeof value === 'string' && /^([01]?\d|2[0-3]):[0-5]\d$/.test(value.trim());
+      }
+
+      function timeToMinutes(time) {
+        if (!isValidTime(time)) return 0;
+        const parts = time.trim().split(':');
+        return Number(parts[0]) * 60 + Number(parts[1]);
+      }
+
+      function minutesToTime(minutes) {
+        const total = ((Math.round(minutes) % 1440) + 1440) % 1440;
+        return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
+      }
+
+      function clampDuration(value) {
+        const parsed = parseInt(value, 10);
+        if (!Number.isFinite(parsed)) return MIN_DURATION;
+        return Math.min(Math.max(parsed, MIN_DURATION), MAX_DURATION);
+      }
+
+      function normalizeSessions(list) {
+        const seen = new Set();
+        const out = [];
+        (Array.isArray(list) ? list : []).forEach((raw) => {
+          if (!isValidTime(raw)) return;
+          const canonical = minutesToTime(timeToMinutes(raw));
+          if (seen.has(canonical)) return;
+          seen.add(canonical);
+          out.push(canonical);
+        });
+        return out.sort();
+      }
+
+      /* ---------- estado ---------- */
+
+      function normalizeLocations(rawLocations) {
+        const locations = [];
+        const usedIds = new Set();
+        (Array.isArray(rawLocations) ? rawLocations : []).forEach((raw) => {
+          if (!raw || typeof raw !== 'object') return;
+          const name = String(raw.name || '').trim() || 'Campanha sem nome';
+          let id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : null;
+          if (!id || usedIds.has(id)) id = makeLocationId();
+          usedIds.add(id);
+          locations.push({
+            id,
+            name,
+            startDate: parseISODate(raw.startDate) ? raw.startDate.trim() : '',
+            endDate: parseISODate(raw.endDate) ? raw.endDate.trim() : ''
+          });
+        });
+        if (!locations.length) locations.push(...createDefaultLocations());
+        return locations;
+      }
+
+      function migrateBookings(rawBookings, locations) {
+        const out = {};
+        Object.keys(rawBookings && typeof rawBookings === 'object' ? rawBookings : {}).forEach((key) => {
+          const parts = String(key).split('|');
+          if (parts.length < 3) return;
+          const start = parts.pop();
+          const date = parts.pop();
+          const locRef = parts.join('|');
+          const booking = rawBookings[key];
+          if (!booking || typeof booking !== 'object') return;
+          const location = locations.find((loc) => loc.id === locRef) || locations.find((loc) => loc.name === locRef);
+          if (!location) return;
+          out[`${location.id}|${date}|${start}`] = booking;
+        });
+        return out;
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+
+          appData.locations = normalizeLocations(parsed.locations);
+
+          const selected = Number(parsed.selectedLocation);
+          appData.selectedLocation = Number.isInteger(selected) && selected >= 0 && selected < appData.locations.length ? selected : 0;
+
+          if (Number.isFinite(Number(parsed.morningDuration))) appData.morningDuration = clampDuration(parsed.morningDuration);
+          if (Number.isFinite(Number(parsed.afternoonDuration))) appData.afternoonDuration = clampDuration(parsed.afternoonDuration);
+          appData.morningSessions = normalizeSessions(parsed.morningSessions);
+          appData.afternoonSessions = normalizeSessions(parsed.afternoonSessions);
+
+          appData.bookings = migrateBookings(parsed.bookings, appData.locations);
+
+          // Persiste de imediato o estado normalizado (ids de campanha, chaves de reserva)
+          saveState();
+        } catch (error) {
+          console.warn('Erro ao carregar estado:', error);
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            locations: appData.locations,
+            selectedLocation: appData.selectedLocation,
+            morningDuration: appData.morningDuration,
+            morningSessions: appData.morningSessions,
+            afternoonDuration: appData.afternoonDuration,
+            afternoonSessions: appData.afternoonSessions,
+            bookings: appData.bookings
+          }));
+        } catch (error) {
+          console.warn('Erro ao guardar estado:', error);
+          showToast('Não foi possível guardar os dados neste navegador.', 'error');
+        }
+      }
+
+      function currentLocation() {
+        return appData.locations[appData.selectedLocation] || null;
+      }
+
+      function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[char]));
+      }
+
+      /* ---------- sessões ---------- */
+
+      function calculateDynamicTimeSlots() {
+        const slots = [];
+
+        const push = (type, times, duration) => {
+          const dur = clampDuration(duration);
+          times.forEach((time) => {
+            const startMin = timeToMinutes(time);
+            const endMin = startMin + dur;
+            slots.push({
+              startMin,
+              endMin,
+              startStr: minutesToTime(startMin),
+              endStr: minutesToTime(endMin),
+              overnight: endMin >= 1440,
+              type,
+              duration: dur,
+              label: `${minutesToTime(startMin)} - ${minutesToTime(endMin)}`
+            });
+          });
+        };
+
+        push('morning', appData.morningSessions, appData.morningDuration);
+        push('afternoon', appData.afternoonSessions, appData.afternoonDuration);
+        slots.sort((a, b) => a.startMin - b.startMin);
+
+        let warning = '';
+        for (let i = 0; i < slots.length; i++) {
+          for (let j = i + 1; j < slots.length; j++) {
+            if (slots[i].startMin < slots[j].endMin && slots[j].startMin < slots[i].endMin) {
+              warning = `As sessões ${slots[i].label} e ${slots[j].label} estão sobrepostas.`;
+            }
+          }
+        }
+
+        const overnight = slots.filter((slot) => slot.overnight).map((slot) => slot.label);
+        return { slots, warning, overnight };
+      }
+
+      function getWeekDays(offset) {
+        const now = new Date();
+        const dow = now.getDay();
+        const diffToMonday = dow === 0 ? -6 : 1 - dow;
+        const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diffToMonday + offset * 7);
+        const names = ['SEG.', 'TER.', 'QUA.', 'QUI.', 'SEX.', 'SÁB.', 'DOM.'];
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+          const date = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + i);
+          days.push({
+            name: names[i],
+            label: WEEKDAY_LABELS[i],
+            dateNumber: date.getDate(),
+            fullDate: formatDate(date),
+            isWeekend: i >= 5
+          });
+        }
+        return days;
+      }
+
+      function mondayOf(date) {
+        const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const dow = copy.getDay();
+        copy.setDate(copy.getDate() + (dow === 0 ? -6 : 1 - dow));
+        return copy;
+      }
+
+      function nextWeekday(date) {
+        const copy = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        while (copy.getDay() === 0 || copy.getDay() === 6) copy.setDate(copy.getDate() + 1);
+        return copy;
+      }
+
+      function jumpToLocationStart(location) {
+        const start = parseISODate(location && location.startDate);
+        const end = parseISODate(location && location.endDate);
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+
+        let target = now;
+
+        if (start) {
+          const firstUsableDay = nextWeekday(start);
+          if (firstUsableDay.getTime() > now.getTime()) target = firstUsableDay;
+        }
+        if (end && end.getTime() < now.getTime()) target = end;
+
+        const diffDays = Math.round((mondayOf(target) - mondayOf(now)) / 86400000);
+        appData.currentWeekOffset = Math.round(diffDays / 7);
+      }
+
+      function isWithinCampaign(day, location) {
+        if (!location) return true;
+        const start = parseISODate(location.startDate);
+        const end = parseISODate(location.endDate);
+        if (!start || !end || start > end) return true;
+        const date = parseISODate(day.fullDate);
+        return !!date && date >= start && date <= end;
+      }
+
+      function hasValidRange(location) {
+        if (!location) return false;
+        const start = parseISODate(location.startDate);
+        const end = parseISODate(location.endDate);
+        return !!start && !!end && start <= end;
+      }
+
+      /* ---------- reservas ---------- */
+
+      function bookingKey(day, slot) {
+        const location = currentLocation();
+        return `${location ? location.id : 'unknown'}|${day.fullDate}|${slot.startStr}`;
+      }
+
+      function isBooked(day, slot) {
+        return !!appData.bookings[bookingKey(day, slot)];
+      }
+
+      function parseBookingKey(key) {
+        const parts = String(key).split('|');
+        if (parts.length < 3) return null;
+        const start = parts.pop();
+        const date = parts.pop();
+        return { locationId: parts.join('|'), date, start };
+      }
+
+      function getBookingEntries() {
+        const entries = [];
+        Object.keys(appData.bookings).forEach((key) => {
+          const parsed = parseBookingKey(key);
+          if (!parsed) return;
+          const booking = appData.bookings[key] || {};
+          const location = appData.locations.find((loc) => loc.id === parsed.locationId);
+          entries.push({
+            key,
+            date: parsed.date,
+            start: parsed.start,
+            booking,
+            locationName: location ? location.name : (booking.locationName || '—')
+          });
+        });
+        entries.sort((a, b) => `${a.date}${a.start}`.localeCompare(`${b.date}${b.start}`));
+        return entries;
+      }
+
+      /* ---------- interface ---------- */
+
+      function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.className = `agenda-toast fixed right-6 z-[100] ${type === 'error' ? 'bg-rose-600' : 'bg-emerald-600'} text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl max-w-xs`;
+        toast.setAttribute('role', 'status');
+        toast.setAttribute('aria-live', 'polite');
+        toast.style.bottom = `${24 + Math.min(document.querySelectorAll('.agenda-toast').length, 3) * 56}px`;
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(10px)';
+        }, 2400);
+        setTimeout(() => toast.remove(), 2800);
+      }
+
+      function setBanner(element, text, tone) {
+        if (!element) return;
+        if (!text) {
+          element.className = 'hidden';
+          element.textContent = '';
+          return;
+        }
+        const tones = {
+          warn: 'bg-amber-50 border-amber-200 text-amber-800',
+          info: 'bg-indigo-50 border-indigo-200 text-indigo-800',
+          error: 'bg-rose-50 border-rose-200 text-rose-800'
+        };
+        element.className = `border text-xs font-semibold px-4 py-2 rounded-xl ${tones[tone] || tones.warn}`;
+        element.textContent = text;
+      }
+
+      function buildSessionCard(day, slot, location, now) {
+        const card = document.createElement('div');
+        const inCampaign = isWithinCampaign(day, location);
+        const booked = isBooked(day, slot);
+        const booking = booked ? appData.bookings[bookingKey(day, slot)] : null;
+        const sessionStart = new Date(`${day.fullDate}T${slot.startStr}:00`);
+        const isPast = sessionStart.getTime() < now.getTime();
+
+        card.dataset.slot = `${day.fullDate}T${slot.startStr}`;
+        card.dataset.duration = String(slot.duration);
+
+        if (!inCampaign) {
+          card.dataset.state = 'outside';
+          card.className = 'bg-white border border-dashed border-slate-200 text-slate-400 p-2 rounded-lg my-1 cursor-not-allowed';
+          card.title = `Fora do período da campanha (${formatHumanDate(location ? location.startDate : '')} – ${formatHumanDate(location ? location.endDate : '')})`;
+          card.innerHTML = `
+            <div class="flex items-center space-x-1">
+              <span class="text-[10px]">🚫</span>
+              <span class="text-[10px] font-extrabold truncate">Fora da campanha</span>
+            </div>
+            <div class="text-[9px] font-bold mt-0.5">${escapeHtml(slot.label)}</div>
+          `;
+          card.onclick = () => showToast('Esta data está fora do período da campanha.', 'error');
+          return card;
+        }
+
+        if (isPast) {
+          card.dataset.state = 'past';
+          card.className = 'bg-slate-100 border border-slate-200 text-slate-400 p-2 rounded-lg my-1 opacity-70';
+          card.innerHTML = `
+            <div class="flex items-center space-x-1">
+              <span class="text-[10px]">⏳</span>
+              <span class="text-[10px] font-extrabold truncate">${booked ? 'Sessão realizada' : 'Sessão passada'}</span>
+            </div>
+            <div class="text-[9px] font-bold mt-0.5">${escapeHtml(slot.label)}</div>
+            ${booked ? `<div class="text-[9px] truncate mt-0.5">${escapeHtml(booking.schoolName || '')}</div>` : ''}
+          `;
+          return card;
+        }
+
+        if (booked) {
+          card.dataset.state = 'booked';
+          card.className = 'bg-slate-200 border border-slate-300 text-slate-600 p-2 rounded-lg my-1';
+          card.innerHTML = `
+            <div class="flex items-center space-x-1">
+              <span class="text-[10px]">🔒</span>
+              <span class="text-[10px] font-extrabold truncate">Reservado</span>
+            </div>
+            <div class="text-[9px] font-bold mt-0.5">${escapeHtml(slot.label)}</div>
+            <div class="text-[9px] truncate mt-0.5 text-slate-500">${escapeHtml(booking.schoolName || '')}</div>
+          `;
+          return card;
+        }
+
+        card.dataset.state = 'available';
+        card.className = 'bg-sky-50 border border-sky-200 text-sky-900 p-2 rounded-lg cursor-pointer hover:bg-sky-100 focus:outline-none focus:ring-2 focus:ring-sky-400 transition-all shadow-sm my-1';
+        card.setAttribute('role', 'button');
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Reservar sessão de ${day.label}, ${formatHumanDate(day.fullDate)}, das ${slot.startStr} às ${slot.endStr}`);
+        card.title = `${day.label}, ${formatHumanDate(day.fullDate)} · ${slot.label} (${slot.duration} min)`;
+        card.innerHTML = `
+          <div class="flex items-center space-x-1">
+            <span class="text-[10px]">📅</span>
+            <span class="text-[10px] font-extrabold truncate">Reservar</span>
+          </div>
+          <div class="text-[9px] text-sky-700 font-bold mt-0.5">${escapeHtml(slot.label)} (${slot.duration} min)</div>
+        `;
+        card.onclick = () => openBookingModal(day, slot);
+        card.onkeydown = (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openBookingModal(day, slot);
+          }
+        };
+        return card;
+      }
+
+      function renderCalendar() {
+        const days = getWeekDays(appData.currentWeekOffset);
+        const headerGrid = document.getElementById('calendar-header-grid');
+        const bodyGrid = document.getElementById('calendar-body-grid');
+        const label = document.getElementById('current-week-label');
+        const locationTitle = document.getElementById('week-location-title');
+        const rangeLabel = document.getElementById('campaign-range-label');
+        const banner = document.getElementById('calendar-warning');
+        const location = currentLocation();
+
+        label.textContent = `${formatHumanDate(days[0].fullDate)} → ${formatHumanDate(days[6].fullDate)}`;
+        locationTitle.textContent = location ? location.name : 'Sem campanha';
+
+        if (rangeLabel) {
+          if (hasValidRange(location)) {
+            rangeLabel.textContent = `${formatHumanDate(location.startDate)} – ${formatHumanDate(location.endDate)}`;
+            rangeLabel.classList.remove('hidden');
+          } else {
+            rangeLabel.textContent = '';
+            rangeLabel.classList.add('hidden');
+          }
+        }
+
+        const { slots, warning, overnight } = calculateDynamicTimeSlots();
+        const weekHasCampaignDay = !location || !hasValidRange(location) || days.some((day) => !day.isWeekend && isWithinCampaign(day, location));
+
+        if (warning) {
+          setBanner(banner, `⚠️ ${warning}`, 'warn');
+        } else if (overnight.length) {
+          setBanner(banner, `⚠️ Sessão termina no dia seguinte: ${overnight.join(', ')}.`, 'warn');
+        } else if (!slots.length) {
+          setBanner(banner, 'Não há sessões configuradas. Adicione horários no Painel de Administrador.', 'info');
+        } else if (location && !hasValidRange(location)) {
+          setBanner(banner, 'Defina as datas de início e de fim desta campanha no Painel de Administrador.', 'info');
+        } else if (!weekHasCampaignDay) {
+          setBanner(banner, `Sem sessões nesta semana: a campanha decorre de ${formatHumanDate(location.startDate)} a ${formatHumanDate(location.endDate)}.`, 'info');
+        } else {
+          setBanner(banner, '', 'info');
+        }
+
+        headerGrid.innerHTML = '<div class="text-[10px] font-bold text-slate-400 pt-3">HORA</div>';
+        days.forEach((day) => {
+          const column = document.createElement('div');
+          column.className = `text-center py-1 ${day.isWeekend ? 'opacity-60' : ''}`;
+
+          const nameDiv = document.createElement('div');
+          nameDiv.className = `text-[10px] font-bold ${day.isWeekend ? 'text-slate-300' : 'text-slate-500'}`;
+          nameDiv.textContent = day.name;
+
+          const dateDiv = document.createElement('div');
+          const isToday = day.fullDate === todayISO();
+          const inCampaign = isWithinCampaign(day, location);
+          dateDiv.className = `text-lg font-extrabold ${!inCampaign || day.isWeekend ? 'text-slate-300' : 'text-slate-900'} ${isToday ? 'text-indigo-600' : ''}`;
+          dateDiv.textContent = day.dateNumber;
+
+          column.appendChild(nameDiv);
+          column.appendChild(dateDiv);
+          headerGrid.appendChild(column);
+        });
+
+        bodyGrid.innerHTML = '';
+
+        if (!slots.length) {
+          bodyGrid.innerHTML = '<div class="col-span-8 text-center text-xs font-semibold text-slate-400 py-12">Nenhuma sessão para mostrar. Configure os horários no painel de administração.</div>';
+          return;
+        }
+
+        const now = new Date();
+        const startHour = Math.max(0, Math.floor(Math.min(...slots.map((slot) => slot.startMin)) / 60));
+        const endHour = Math.min(23, Math.floor(Math.max(...slots.map((slot) => slot.startMin)) / 60));
+
+        for (let hour = startHour; hour <= endHour; hour++) {
+          const timeCol = document.createElement('div');
+          timeCol.className = 'text-[10px] font-bold text-slate-400 py-4 border-t border-slate-100';
+          timeCol.textContent = `${pad(hour)}:00`;
+          bodyGrid.appendChild(timeCol);
+
+          days.forEach((day) => {
+            const cell = document.createElement('div');
+            cell.className = `border-t border-slate-100 p-1 min-h-[64px]${day.isWeekend ? ' bg-slate-50/60' : ''}`;
+
+            if (!day.isWeekend) {
+              const matches = slots.filter((slot) => Math.floor(slot.startMin / 60) === hour);
+              matches.forEach((slot) => cell.appendChild(buildSessionCard(day, slot, location, now)));
+            }
+
+            bodyGrid.appendChild(cell);
+          });
+        }
+      }
+
+      function renderLocationSelect() {
+        const select = document.getElementById('location-select');
+        select.innerHTML = '';
+        appData.locations.forEach((location, index) => {
+          const option = document.createElement('option');
+          option.value = String(index);
+          option.textContent = location.name;
+          select.appendChild(option);
+        });
+        select.value = String(appData.selectedLocation);
+      }
+
+      function syncDurationInputs() {
+        const morningInput = document.getElementById('admin-morning-min-input');
+        const afternoonInput = document.getElementById('admin-afternoon-min-input');
+        if (morningInput) morningInput.value = appData.morningDuration;
+        if (afternoonInput) afternoonInput.value = appData.afternoonDuration;
+      }
+
+      function buildSessionRow(type, time, index) {
+        const row = document.createElement('div');
+        row.className = 'flex items-center space-x-2';
+
+        const input = document.createElement('input');
+        input.type = 'time';
+        input.value = time;
+        input.className = 'flex-grow p-2 border rounded-lg text-xs font-bold bg-white';
+        input.setAttribute('aria-label', `Hora da sessão ${type === 'morning' ? 'da manhã' : 'da tarde'} ${index + 1}`);
+        input.onchange = (event) => {
+          const raw = event.target.value;
+          const list = type === 'morning' ? appData.morningSessions : appData.afternoonSessions;
+
+          if (!isValidTime(raw)) {
+            showToast('Hora inválida.', 'error');
+            renderAdminSessions();
+            return;
+          }
+
+          const canonical = minutesToTime(timeToMinutes(raw));
+          const duplicated = list.some((time, i) => i !== index && time === canonical);
+
+          if (duplicated) {
+            showToast('Já existe uma sessão a essa hora.', 'error');
+            renderAdminSessions();
+            return;
+          }
+
+          const next = list.slice();
+          next[index] = canonical;
+          if (type === 'morning') appData.morningSessions = normalizeSessions(next);
+          else appData.afternoonSessions = normalizeSessions(next);
+
+          saveState();
+          renderAdminSessions();
+          renderCalendar();
+        };
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'text-rose-500 hover:text-rose-700 font-bold px-2 text-lg leading-none';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.setAttribute('aria-label', `Remover sessão das ${time}`);
+        removeBtn.onclick = () => removeSession(type, index);
+
+        row.appendChild(input);
+        row.appendChild(removeBtn);
+        return row;
+      }
+
+      function renderAdminSessions() {
+        const morningList = document.getElementById('admin-morning-list');
+        const afternoonList = document.getElementById('admin-afternoon-list');
+        if (!morningList || !afternoonList) return;
+
+        morningList.innerHTML = '';
+        appData.morningSessions.forEach((time, index) => morningList.appendChild(buildSessionRow('morning', time, index)));
+
+        afternoonList.innerHTML = '';
+        appData.afternoonSessions.forEach((time, index) => afternoonList.appendChild(buildSessionRow('afternoon', time, index)));
+
+        if (!appData.morningSessions.length) {
+          morningList.innerHTML = '<p class="text-[11px] text-slate-400 italic">Sem sessões da manhã.</p>';
+        }
+        if (!appData.afternoonSessions.length) {
+          afternoonList.innerHTML = '<p class="text-[11px] text-slate-400 italic">Sem sessões da tarde.</p>';
+        }
+
+        syncDurationInputs();
+      }
+
+      function removeSession(type, index) {
+        const list = type === 'morning' ? appData.morningSessions : appData.afternoonSessions;
+        const time = list[index];
+        if (!time) return;
+
+        const affected = Object.keys(appData.bookings).filter((key) => key.endsWith(`|${time}`));
+        if (affected.length) {
+          const proceed = confirm(`Existem ${affected.length} reserva(s) nesta hora. Ao remover o horário das ${time}, essas reservas serão apagadas. Continuar?`);
+          if (!proceed) return;
+          affected.forEach((key) => delete appData.bookings[key]);
+        }
+
+        list.splice(index, 1);
+        saveState();
+        renderAdminSessions();
+        renderCalendar();
+        if (document.getElementById('bookings-tbody')) renderBookings();
+      }
+
+      function renderAdminLocations() {
+        const container = document.getElementById('admin-locations-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        appData.locations.forEach((location, index) => {
+          const item = document.createElement('div');
+          item.className = 'flex flex-col p-3 bg-slate-50 border rounded-lg space-y-2';
+
+          const topRow = document.createElement('div');
+          topRow.className = 'flex justify-between items-start';
+
+          const nameInput = document.createElement('input');
+          nameInput.type = 'text';
+          nameInput.value = location.name;
+          nameInput.className = 'font-bold text-xs bg-transparent border-none p-0 focus:ring-0 flex-grow';
+          nameInput.setAttribute('aria-label', 'Nome da campanha');
+          nameInput.onchange = (event) => {
+            const name = event.target.value.trim();
+            if (!name) {
+              showToast('O nome da campanha não pode ficar vazio.', 'error');
+              event.target.value = location.name;
+              return;
+            }
+            appData.locations[index].name = name;
+            saveState();
+            renderLocationSelect();
+            renderCalendar();
+            renderBookings();
+          };
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'text-rose-600 font-bold text-[10px] hover:underline ml-2';
+          removeBtn.textContent = 'Remover';
+          removeBtn.onclick = () => removeLocation(index);
+
+          topRow.appendChild(nameInput);
+          topRow.appendChild(removeBtn);
+
+          const dateRow = document.createElement('div');
+          dateRow.className = 'flex items-center space-x-2';
+
+          const startInput = document.createElement('input');
+          startInput.type = 'date';
+          startInput.value = location.startDate;
+          startInput.className = 'w-full text-[10px] p-1 border rounded bg-white';
+          startInput.setAttribute('aria-label', 'Data de início da campanha');
+          startInput.onchange = (event) => {
+            appData.locations[index].startDate = event.target.value;
+            saveState();
+            renderCalendar();
+          };
+
+          const toSpan = document.createElement('span');
+          toSpan.className = 'text-[10px] text-slate-400';
+          toSpan.textContent = 'a';
+
+          const endInput = document.createElement('input');
+          endInput.type = 'date';
+          endInput.value = location.endDate;
+          endInput.className = 'w-full text-[10px] p-1 border rounded bg-white';
+          endInput.setAttribute('aria-label', 'Data de fim da campanha');
+          endInput.onchange = (event) => {
+            appData.locations[index].endDate = event.target.value;
+            saveState();
+            renderCalendar();
+          };
+
+          dateRow.appendChild(startInput);
+          dateRow.appendChild(toSpan);
+          dateRow.appendChild(endInput);
+
+          item.appendChild(topRow);
+          item.appendChild(dateRow);
+          container.appendChild(item);
+        });
+      }
+
+      function renderBookings() {
+        const tbody = document.getElementById('bookings-tbody');
+        const summary = document.getElementById('bookings-summary');
+        if (!tbody) return;
+
+        const entries = getBookingEntries();
+        const totalStudents = entries.reduce((sum, entry) => sum + (Number(entry.booking.students) || 0), 0);
+
+        if (summary) {
+          summary.textContent = entries.length
+            ? `${entries.length} reserva(s) · ${totalStudents} aluno(s) · guardado neste navegador`
+            : 'Ainda não existem reservas registadas.';
+        }
+
+        tbody.innerHTML = '';
+
+        if (!entries.length) {
+          const row = document.createElement('tr');
+          row.innerHTML = '<td colspan="9" class="px-4 py-8 text-center text-slate-400">Nenhuma reserva registada. As reservas feitas no calendário aparecem aqui.</td>';
+          tbody.appendChild(row);
+          return;
+        }
+
+        entries.forEach((entry) => {
+          const booking = entry.booking;
+          const row = document.createElement('tr');
+          row.className = 'hover:bg-slate-50';
+
+          const cells = [
+            formatHumanDate(entry.date),
+            `${escapeHtml(booking.sessionStart || entry.start)} – ${escapeHtml(booking.sessionEnd || '')}`,
+            escapeHtml(entry.locationName),
+            escapeHtml(booking.schoolName || '—'),
+            String(Number(booking.students) || 0),
+            escapeHtml(`${booking.firstName || ''} ${booking.lastName || ''}`.trim() || '—'),
+            escapeHtml(booking.phone || '—'),
+            booking.laCaixa === 'Sim'
+              ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">Sim</span>`
+              : `<span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px]">Não</span>`
+          ];
+
+          cells.forEach((content, index) => {
+            const cell = document.createElement('td');
+            cell.className = `px-4 py-2 ${index === 0 ? 'font-bold text-slate-800 whitespace-nowrap' : 'text-slate-600'}`;
+            cell.innerHTML = content;
+            row.appendChild(cell);
+          });
+
+          const actionCell = document.createElement('td');
+          actionCell.className = 'px-4 py-2 text-right';
+          const cancelBtn = document.createElement('button');
+          cancelBtn.type = 'button';
+          cancelBtn.className = 'text-rose-600 font-bold hover:underline';
+          cancelBtn.textContent = 'Cancelar';
+          cancelBtn.setAttribute('aria-label', `Cancelar reserva de ${booking.schoolName || 'escola'} em ${formatHumanDate(entry.date)}`);
+          cancelBtn.onclick = () => cancelBooking(entry);
+          actionCell.appendChild(cancelBtn);
+          row.appendChild(actionCell);
+
+          tbody.appendChild(row);
+        });
+      }
+
+      function cancelBooking(entry) {
+        const label = `${entry.booking.schoolName || 'esta reserva'} · ${formatHumanDate(entry.date)} ${entry.start}`;
+        if (!confirm(`Cancelar a reserva de ${label}?`)) return;
+        delete appData.bookings[entry.key];
+        saveState();
+        renderBookings();
+        renderCalendar();
+        showToast('Reserva cancelada.', 'success');
+      }
+
+      function csvCell(value) {
+        let text = value === null || value === undefined ? '' : String(value);
+        if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+
+      function exportCsv() {
+        const entries = getBookingEntries();
+        if (!entries.length) {
+          showToast('Não há reservas para exportar.', 'error');
+          return;
+        }
+
+        const rows = [[
+          'Localidade', 'Data', 'Início', 'Fim', 'Duração (min)', 'Escola', 'Nº alunos', 'Ano',
+          'Nome', 'Apelido', 'E-mail', 'Telemóvel', 'Acompanhante', 'Telemóvel acompanhante',
+          'Programa la Caixa', 'Detalhe', 'Registado em'
+        ]];
+
+        entries.forEach((entry) => {
+          const booking = entry.booking;
+          rows.push([
+            entry.locationName,
+            entry.date,
+            booking.sessionStart || entry.start,
+            booking.sessionEnd || '',
+            booking.duration || '',
+            booking.schoolName || '',
+            booking.students || '',
+            booking.grade || '',
+            booking.firstName || '',
+            booking.lastName || '',
+            booking.email || '',
+            booking.phone || '',
+            booking.companionName || '',
+            booking.companionPhone || '',
+            booking.laCaixa || '',
+            booking.laCaixaDetails || '',
+            booking.createdAt || ''
+          ]);
+        });
+
+        const csv = rows.map((row) => row.map(csvCell).join(';')).join('\r\n');
+        const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `reservas-campanha-educativa-${todayISO()}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast(`${entries.length} reserva(s) exportadas.`, 'success');
+      }
+
+      /* ---------- modal ---------- */
+
+      const modal = document.getElementById('booking-modal');
+      const bookingForm = document.getElementById('modal-booking-form');
+      const laDetails = document.getElementById('field-la-details');
+      let lastFocusedElement = null;
+
+      function openBookingModal(day, slot) {
+        const location = currentLocation();
+
+        if (!isWithinCampaign(day, location)) {
+          showToast('Esta data está fora do período da campanha.', 'error');
+          return;
+        }
+        if (isBooked(day, slot)) {
+          showToast('Este horário já está reservado.', 'error');
+          return;
+        }
+        if (new Date(`${day.fullDate}T${slot.startStr}:00`).getTime() < Date.now()) {
+          showToast('Esta sessão já ocorreu.', 'error');
+          return;
+        }
+
+        appData.selectedSession = { day, slot };
+        lastFocusedElement = document.activeElement;
+
+        document.getElementById('modal-session-subtitle').textContent =
+          `${day.label}, ${formatHumanDate(day.fullDate)} · ${slot.label} (${slot.duration} min) · ${location ? location.name : ''}`;
+
+        modal.classList.remove('hidden');
+        setTimeout(() => document.getElementById('field-first-name').focus(), 30);
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+        appData.selectedSession = null;
+        bookingForm.reset();
+        laDetails.classList.add('hidden');
+        laDetails.required = false;
+        if (lastFocusedElement && typeof lastFocusedElement.focus === 'function' && document.contains(lastFocusedElement)) {
+          lastFocusedElement.focus();
+        }
+        lastFocusedElement = null;
+      }
+
+      function validateBookingForm() {
+        const firstName = document.getElementById('field-first-name').value.trim();
+        const lastName = document.getElementById('field-last-name').value.trim();
+        const email = document.getElementById('field-email').value.trim();
+        const phone = document.getElementById('field-phone').value.trim().replace(/[\s.\-()]/g, '');
+        const companionName = document.getElementById('field-companion-name').value.trim();
+        const companionPhone = document.getElementById('field-companion-phone').value.trim().replace(/[\s.\-()]/g, '');
+        const schoolName = document.getElementById('field-school-name').value.trim();
+        const students = parseInt(document.getElementById('field-students').value, 10);
+        const grade = document.getElementById('field-grade').value.trim();
+        const laCaixa = document.querySelector('input[name="lacaixa"]:checked');
+
+        if (!firstName || !lastName || !schoolName) {
+          showToast('Preencha o nome, o apelido e a escola.', 'error');
+          return null;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          showToast('Indique um e-mail válido.', 'error');
+          document.getElementById('field-email').focus();
+          return null;
+        }
+        if (!PT_PHONE_RE.test(phone)) {
+          showToast('O telemóvel deve ter 9 dígitos (ex.: 912345678).', 'error');
+          document.getElementById('field-phone').focus();
+          return null;
+        }
+        if (!companionName) {
+          showToast('Indique o nome do acompanhante.', 'error');
+          document.getElementById('field-companion-name').focus();
+          return null;
+        }
+        if (!PT_PHONE_RE.test(companionPhone)) {
+          showToast('O telemóvel do acompanhante deve ter 9 dígitos.', 'error');
+          document.getElementById('field-companion-phone').focus();
+          return null;
+        }
+        if (!Number.isFinite(students) || students < 1 || students > MAX_STUDENTS) {
+          showToast(`O número de alunos tem de estar entre 1 e ${MAX_STUDENTS}.`, 'error');
+          document.getElementById('field-students').focus();
+          return null;
+        }
+        if (!grade) {
+          showToast('Indique o ano frequentado.', 'error');
+          document.getElementById('field-grade').focus();
+          return null;
+        }
+        if (!laCaixa) {
+          showToast('Indique se o grupo participa num programa da Fundação "la Caixa".', 'error');
+          return null;
+        }
+        if (laCaixa.value === 'Sim' && !laDetails.value.trim()) {
+          showToast('Indique o programa da Fundação "la Caixa".', 'error');
+          laDetails.focus();
+          return null;
+        }
+
+        return {
+          firstName, lastName, email, phone, companionName, companionPhone,
+          schoolName, students, grade,
+          laCaixa: laCaixa.value,
+          laCaixaDetails: laCaixa.value === 'Sim' ? laDetails.value.trim() : ''
+        };
+      }
+
+      /* ---------- ligações ---------- */
+
+      const pagePublic = document.getElementById('page-public');
+      const pageAdmin = document.getElementById('page-admin');
+      const btnPublic = document.getElementById('btn-show-public');
+      const btnAdmin = document.getElementById('btn-show-admin');
+
+      btnPublic.onclick = () => {
+        pagePublic.classList.remove('hidden');
+        pageAdmin.classList.add('hidden');
+        btnPublic.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm';
+        btnAdmin.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900';
+        renderCalendar();
+      };
+
+      btnAdmin.onclick = () => {
+        pageAdmin.classList.remove('hidden');
+        pagePublic.classList.add('hidden');
+        btnAdmin.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm';
+        btnPublic.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900';
+        renderAdminSessions();
+        renderAdminLocations();
+        renderBookings();
+      };
+
+      document.getElementById('btn-prev-week').onclick = () => { appData.currentWeekOffset--; renderCalendar(); };
+      document.getElementById('btn-next-week').onclick = () => { appData.currentWeekOffset++; renderCalendar(); };
+      document.getElementById('btn-today').onclick = () => { appData.currentWeekOffset = 0; renderCalendar(); };
+
+      document.getElementById('location-select').onchange = (event) => {
+        const index = parseInt(event.target.value, 10);
+        appData.selectedLocation = Number.isInteger(index) && index >= 0 && index < appData.locations.length ? index : 0;
+        saveState();
+        jumpToLocationStart(currentLocation());
+        renderCalendar();
+        renderBookings();
+      };
+
+      document.getElementById('btn-close-modal').onclick = closeModal;
+      document.getElementById('btn-cancel-modal').onclick = closeModal;
+      modal.addEventListener('click', (event) => { if (event.target === modal) closeModal(); });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) closeModal();
+      });
+
+      document.getElementById('radio-la-yes').onchange = () => {
+        laDetails.classList.remove('hidden');
+        laDetails.required = true;
+        laDetails.focus();
+      };
+      document.getElementById('radio-la-no').onchange = () => {
+        laDetails.classList.add('hidden');
+        laDetails.required = false;
+        laDetails.value = '';
+      };
+
+      bookingForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        if (!appData.selectedSession) return;
+
+        const data = validateBookingForm();
+        if (!data) return;
+
+        const { day, slot } = appData.selectedSession;
+        const location = currentLocation();
+        const key = bookingKey(day, slot);
+
+        if (appData.bookings[key]) {
+          showToast('Este horário acabou de ser reservado.', 'error');
+          closeModal();
+          renderCalendar();
+          return;
+        }
+
+        appData.bookings[key] = {
+          locationId: location ? location.id : '',
+          locationName: location ? location.name : '',
+          date: day.fullDate,
+          sessionStart: slot.startStr,
+          sessionEnd: slot.endStr,
+          duration: slot.duration,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          companionName: data.companionName,
+          companionPhone: data.companionPhone,
+          schoolName: data.schoolName,
+          students: data.students,
+          grade: data.grade,
+          laCaixa: data.laCaixa,
+          laCaixaDetails: data.laCaixaDetails,
+          createdAt: new Date().toISOString()
+        };
+
+        saveState();
+        closeModal();
+        renderCalendar();
+        renderBookings();
+        showToast(`Reserva registada · ${data.schoolName} · ${formatHumanDate(day.fullDate)} às ${slot.startStr}`, 'success');
+      });
+
+      function suggestStart(existing, duration, fallback) {
+        if (!existing.length) return fallback;
+        const taken = new Set(existing);
+        const sorted = existing.slice().sort();
+        let minutes = timeToMinutes(sorted[sorted.length - 1]) + duration;
+        while (taken.has(minutesToTime(minutes)) && minutes < 23 * 60) minutes += duration;
+        if (minutes > 23 * 60 + 59 || taken.has(minutesToTime(minutes))) return fallback;
+        return minutesToTime(minutes);
+      }
+
+      function addSession(type) {
+        const list = type === 'morning' ? appData.morningSessions : appData.afternoonSessions;
+        const duration = type === 'morning' ? appData.morningDuration : appData.afternoonDuration;
+        const fallback = type === 'morning' ? '09:00' : '14:00';
+        const suggestion = suggestStart(list, duration, fallback);
+        const next = normalizeSessions([...list, suggestion]);
+
+        if (next.length === list.length) {
+          showToast('Não foi possível adicionar: o horário já existe.', 'error');
+          return;
+        }
+
+        if (type === 'morning') appData.morningSessions = next;
+        else appData.afternoonSessions = next;
+
+        saveState();
+        renderAdminSessions();
+        renderCalendar();
+      }
+
+      document.getElementById('btn-add-morning').onclick = () => addSession('morning');
+      document.getElementById('btn-add-afternoon').onclick = () => addSession('afternoon');
+
+      function removeLocation(index) {
+        if (appData.locations.length <= 1) {
+          showToast('É necessário manter pelo menos uma campanha.', 'error');
+          return;
+        }
+
+        const location = appData.locations[index];
+        const affected = Object.keys(appData.bookings).filter((key) => key.startsWith(`${location.id}|`));
+
+        if (affected.length) {
+          const proceed = confirm(`A campanha "${location.name}" tem ${affected.length} reserva(s). Ao removê-la, essas reservas serão apagadas. Continuar?`);
+          if (!proceed) return;
+          affected.forEach((key) => delete appData.bookings[key]);
+        }
+
+        appData.locations.splice(index, 1);
+        if (appData.selectedLocation >= appData.locations.length) appData.selectedLocation = appData.locations.length - 1;
+        if (appData.selectedLocation < 0) appData.selectedLocation = 0;
+
+        saveState();
+        renderAdminLocations();
+        renderLocationSelect();
+        renderCalendar();
+        renderBookings();
+      }
+
+      document.getElementById('btn-add-location').onclick = () => {
+        const nameInput = document.getElementById('admin-new-location-input');
+        const startInput = document.getElementById('admin-new-location-start');
+        const endInput = document.getElementById('admin-new-location-end');
+        const name = nameInput.value.trim();
+        const start = startInput.value;
+        const end = endInput.value;
+
+        if (!name) {
+          showToast('Indique o nome da campanha.', 'error');
+          nameInput.focus();
+          return;
+        }
+        if (!parseISODate(start) || !parseISODate(end)) {
+          showToast('Indique as datas de início e de fim.', 'error');
+          return;
+        }
+        if (start > end) {
+          showToast('A data de início não pode ser posterior à data de fim.', 'error');
+          return;
+        }
+
+        appData.locations.push({ id: makeLocationId(), name, startDate: start, endDate: end });
+        appData.selectedLocation = appData.locations.length - 1;
+
+        nameInput.value = '';
+        startInput.value = '';
+        endInput.value = '';
+
+        saveState();
+        renderAdminLocations();
+        renderLocationSelect();
+        jumpToLocationStart(currentLocation());
+        renderCalendar();
+        renderBookings();
+        showToast(`Campanha "${name}" criada.`, 'success');
+      };
+
+      document.getElementById('admin-morning-min-input').onchange = (event) => {
+        appData.morningDuration = clampDuration(event.target.value);
+        event.target.value = appData.morningDuration;
+        saveState();
+        renderAdminSessions();
+        renderCalendar();
+      };
+
+      document.getElementById('admin-afternoon-min-input').onchange = (event) => {
+        appData.afternoonDuration = clampDuration(event.target.value);
+        event.target.value = appData.afternoonDuration;
+        saveState();
+        renderAdminSessions();
+        renderCalendar();
+      };
+
+      document.getElementById('btn-trigger-google-sync').onclick = () => {
+        const proceed = confirm('Demonstração: isto substitui os horários atuais por horários de exemplo. Continuar?');
+        if (!proceed) return;
+
+        appData.morningSessions = ['09:15', '11:00', '13:30'];
+        appData.morningDuration = 100;
+        appData.afternoonSessions = ['14:45', '16:00'];
+        appData.afternoonDuration = 60;
+
+        saveState();
+        renderAdminSessions();
+        syncDurationInputs();
+        renderCalendar();
+        showToast('Simulação: horários recebidos do Google Calendar.', 'success');
+      };
+
+      document.getElementById('btn-execute-batch').onclick = () => {
+        const start = document.getElementById('admin-replicate-start').value;
+        const end = document.getElementById('admin-replicate-end').value;
+
+        if (!parseISODate(start) || !parseISODate(end)) {
+          showToast('Selecione as datas de início e de fim para replicar.', 'error');
+          return;
+        }
+        if (start > end) {
+          showToast('A data de início não pode ser posterior à data de fim.', 'error');
+          return;
+        }
+
+        let weekdays = 0;
+        const cursor = parseISODate(start);
+        const last = parseISODate(end);
+        while (cursor && last && cursor <= last) {
+          const dayOfWeek = cursor.getDay();
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) weekdays++;
+          cursor.setDate(cursor.getDate() + 1);
+        }
+
+        showToast(`Simulação: ${weekdays} dia(s) útil(eis) entre ${formatHumanDate(start)} e ${formatHumanDate(end)} ficariam com os horários atuais.`, 'success');
+      };
+
+      document.getElementById('btn-export-csv').onclick = exportCsv;
+
+      document.getElementById('btn-reset-data').onclick = () => {
+        if (!confirm('Tem a certeza que quer apagar todos os dados locais (campanhas, horários e reservas)?')) return;
+
+        localStorage.removeItem(STORAGE_KEY);
+
+        appData.locations = createDefaultLocations();
+        appData.selectedLocation = 0;
+        appData.morningDuration = defaultState.morningDuration;
+        appData.morningSessions = defaultState.morningSessions.slice();
+        appData.afternoonDuration = defaultState.afternoonDuration;
+        appData.afternoonSessions = defaultState.afternoonSessions.slice();
+        appData.bookings = {};
+        appData.currentWeekOffset = 0;
+        appData.selectedSession = null;
+
+        document.getElementById('admin-new-location-input').value = '';
+        document.getElementById('admin-new-location-start').value = '';
+        document.getElementById('admin-new-location-end').value = '';
+        document.getElementById('admin-replicate-start').value = '';
+        document.getElementById('admin-replicate-end').value = '';
+        bookingForm.reset();
+        laDetails.value = '';
+        laDetails.classList.add('hidden');
+        laDetails.required = false;
+
+        renderLocationSelect();
+        renderAdminLocations();
+        renderAdminSessions();
+        renderBookings();
+        jumpToLocationStart(currentLocation());
+        renderCalendar();
+        showToast('Dados locais apagados.', 'success');
+      };
+
+      loadState();
+      renderLocationSelect();
+      renderAdminLocations();
+      renderAdminSessions();
+      renderBookings();
+      jumpToLocationStart(currentLocation());
+      renderCalendar();
+    })();
+  </script>
+</body>
+</html>
