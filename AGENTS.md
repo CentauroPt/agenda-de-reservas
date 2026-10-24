@@ -28,5 +28,6 @@ Sem `-Message`, usa a mensagem por omissão `Atualiza projeto`.
   noutras pastas.
 - Não sincronizar código que não abre: validar o JavaScript antes do commit (o `tools/sync.ps1`
   verifica a sintaxe do bloco `<script>` de `index.html` com `node --check`, quando o Node existe).
-- O deploy no Vercel é automático a cada push para `main`; branches e pull requests geram previews.
+- O deploy é automático a cada push para `main`: GitHub Pages (principal) e Vercel (quando ligado).
+  Branches e pull requests no Vercel geram previews.
 - Os dados de demonstração vivem no `localStorage` do navegador — não entram no repositório.

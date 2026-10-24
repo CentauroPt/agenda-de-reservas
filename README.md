@@ -35,7 +35,21 @@ python -m http.server 8000
 Não há dependências para instalar. O único recurso externo é o Tailwind CSS via CDN
 (`cdn.tailwindcss.com`), pelo que é necessária ligação à internet na primeira carga.
 
-### Publicar no Vercel
+### Publicar no GitHub Pages (recomendado — sem build, sem custos)
+
+O repositório já está pronto: `index.html` na raiz e `.nojekyll` a impedir o processamento Jekyll.
+
+1. No GitHub, abrir **Settings → Pages**.
+2. Em **Source**, escolher `Deploy from a branch`.
+3. **Branch:** `main` · **Folder:** `/ (root)` → **Save**.
+
+Ao fim de ~1 minuto a aplicação fica publicada em:
+
+**https://centauropt.github.io/agenda-de-reservas/**
+
+Cada push para `main` republica automaticamente (pode levar até 1 minuto a propagar).
+
+### Publicar no Vercel (alternativa)
 
 O projeto é um site estático puro (sem build, sem dependências), por isso o deploy é direto:
 
@@ -63,16 +77,12 @@ requests geram *preview deployments*.
 > Nota: em produção os dados das reservas continuam no `localStorage` de cada visitante. No domínio
 > Vercel isso é aceitável para demonstração, mas para uso real é preciso backend (ver limitações).
 
-### Publicar no GitHub Pages (alternativa)
-
-`Settings → Pages → Deploy from a branch → main / (root)`. O `index.html` da raiz é servido
-diretamente, sem precisar do `vercel.json`.
-
 ## Estrutura
 
 ```
 index.html   # aplicação completa (HTML + CSS + JavaScript)
 vercel.json  # configuração de deploy estático no Vercel
+.nojekyll    # diz ao GitHub Pages para servir os ficheiros tal como estão
 docs/        # capturas de ecrã usadas na documentação
 ```
 
