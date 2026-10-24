@@ -18,6 +18,8 @@ grupos escolares e painel de administração com horários, durações, localida
 - No painel de administração o calendário é editável: arrastar o bloco muda hora/dia, arrastar a base
   redimensiona, duplo clique no vazio cria e duplo clique no bloco apaga.
 - Sessões coloridas por estado: disponível, reservada, passada e fora do período da campanha.
+- **Sessões passadas** ficam esbatidas (opacidade 50%), com contorno tracejado e a indicação
+  "⏳ Sessão passada"; não abrem o formulário nem podem ser reservadas.
 - Navegação por semanas, botão "Hoje" e salto automático para a semana da campanha ao mudar de localidade.
 - Aviso de sessões sobrepostas e de sessões que terminam no dia seguinte.
 - Formulário de reserva com validação de nome, escola, e-mail, telemóvel português (9 dígitos),

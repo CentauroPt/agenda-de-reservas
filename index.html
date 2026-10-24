@@ -1287,11 +1287,14 @@
           }
         } else if (isPast) {
           element.dataset.state = 'past';
-          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-slate-200 bg-slate-100 text-slate-400 px-1.5 py-1 overflow-hidden cursor-not-allowed select-none';
+          element.style.opacity = '0.5';
+          element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-slate-400 px-1.5 py-1 overflow-hidden select-none cursor-not-allowed';
           element.innerHTML = `
-            <div class="text-[10px] font-extrabold truncate">Sessão passada</div>
-            <div class="text-[9px] font-bold">${slot.startStr} – ${slot.endStr}</div>
+            <div class="text-[10px] font-extrabold truncate">⏳ Sessão passada</div>
+            <div class="text-[9px] font-bold line-through">${slot.startStr} – ${slot.endStr}</div>
           `;
+          element.title = 'Sessão já realizada — não é possível reservar.';
+          if (!editable) element.onclick = () => showToast('Esta sessão já passou. Escolhe uma sessão futura.', 'error');
         } else {
           element.dataset.state = 'available';
           element.className = 'cal-event absolute left-1 right-1 rounded-lg border border-sky-200 bg-sky-50 text-sky-900 px-1.5 py-1 overflow-hidden shadow-sm cursor-pointer select-none hover:bg-sky-100';
@@ -2263,6 +2266,13 @@
         const { day, slot } = appData.selectedSession;
         const location = currentLocation();
         const key = bookingKey(day, slot);
+
+        if (new Date(`${day.fullDate}T${slot.startStr}:00`).getTime() <= Date.now()) {
+          showToast('Esta sessão já passou. Escolhe uma sessão futura.', 'error');
+          closeModal();
+          renderCalendar();
+          return;
+        }
 
         if (appData.bookings[key]) {
           showToast('Este horário acabou de ser reservado.', 'error');
