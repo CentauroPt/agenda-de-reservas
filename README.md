@@ -21,6 +21,8 @@ grupos escolares e painel de administração com horários, durações, localida
 - **Sessões passadas** ficam esbatidas (opacidade 50%), com contorno tracejado e a indicação
   "⏳ Sessão passada"; não abrem o formulário nem podem ser reservadas.
 - Navegação por semanas, botão "Hoje" e salto automático para a semana da campanha ao mudar de localidade.
+- Na página de reservas não há separadores: o acesso ao painel faz-se pelo link discreto **"Painel Gestão"**
+  no fim da página (letra pequena, cinza muito claro, sem sublinhado), que pede o PIN.
 - Aviso de sessões sobrepostas e de sessões que terminam no dia seguinte.
 - Formulário de reserva com validação de nome, escola, e-mail, telemóvel português (9 dígitos),
   número de alunos (1–25), ano frequentado e programa da Fundação "la Caixa".

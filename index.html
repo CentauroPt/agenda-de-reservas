@@ -96,7 +96,7 @@
           <span id="brand-subtitle" class="hidden sm:block text-xs text-slate-500">Fundação "la Caixa" • Reservas Creactivity</span>
         </div>
       </div>
-      <nav class="flex space-x-1 sm:space-x-2 bg-slate-100 p-1 rounded-xl shrink-0">
+      <nav id="main-nav" style="display:none" class="flex space-x-1 sm:space-x-2 bg-slate-100 p-1 rounded-xl shrink-0">
         <button id="btn-show-public" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm"><span data-brand-tab="calendar" class="hidden sm:inline">📅 Calendário de Reservas</span><span data-brand-tab="calendar" class="sm:hidden">📅 Calendário</span></button>
         <button id="btn-show-admin" class="px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900"><span data-brand-tab="admin" class="hidden sm:inline">⚙️ Painel Administrador</span><span data-brand-tab="admin" class="sm:hidden">⚙️ Admin</span></button>
       </nav>
@@ -126,6 +126,10 @@
 
       <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-x-auto p-4">
         <div id="calendar-week" class="min-w-[900px]"></div>
+      </div>
+
+      <div class="text-center pt-1 pb-3">
+        <button type="button" id="btn-footer-admin" class="text-[10px] font-normal text-slate-300 hover:text-slate-400 transition-colors">Painel Gestão</button>
       </div>
     </section>
 
@@ -2463,6 +2467,9 @@
       const btnAdmin = document.getElementById('btn-show-admin');
 
       btnPublic.onclick = () => {
+        const nav = document.getElementById('main-nav');
+        if (nav) nav.style.display = 'none';
+
         pagePublic.classList.remove('hidden');
         pageAdmin.classList.add('hidden');
         btnPublic.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm';
@@ -2485,6 +2492,9 @@
       }
 
       function openAdminPanel() {
+        const nav = document.getElementById('main-nav');
+        if (nav) nav.style.display = 'flex';
+
         pageAdmin.classList.remove('hidden');
         pagePublic.classList.add('hidden');
         btnAdmin.className = 'px-2.5 sm:px-4 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm';
@@ -2591,6 +2601,9 @@
       };
 
       btnAdmin.onclick = requestAdminAccess;
+
+      const footerAdmin = document.getElementById('btn-footer-admin');
+      if (footerAdmin) footerAdmin.onclick = requestAdminAccess;
 
       document.getElementById('btn-prev-week').onclick = () => { appData.currentWeekOffset--; renderCalendar(); };
       document.getElementById('btn-next-week').onclick = () => { appData.currentWeekOffset++; renderCalendar(); };
