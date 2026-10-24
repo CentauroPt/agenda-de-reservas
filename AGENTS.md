@@ -23,6 +23,9 @@ Sem `-Message`, usa a mensagem por omissão `Atualiza projeto`.
 
 ## Regras
 
+- **Depois de cada alteração**, indicar sempre dois links ao utilizador: a pré-visualização local
+  (`http://127.0.0.1:8080`, com auto-reload) e o site publicado no GitHub Pages
+  (`https://centauropt.github.io/agenda-de-reservas/`), para revisão imediata.
 - Nunca usar `git push --force` em `main`.
 - `index.html` na raiz é a **única fonte de verdade** da aplicação; não criar cópias divergentes
   noutras pastas.

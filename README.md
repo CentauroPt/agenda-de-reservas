@@ -37,6 +37,17 @@ python -m http.server 8000
 Não há dependências para instalar. O único recurso externo é o Tailwind CSS via CDN
 (`cdn.tailwindcss.com`), pelo que é necessária ligação à internet na primeira carga.
 
+### Ver as alterações em direto
+
+Servidor de pré-visualização com **auto-reload** (recarrega a página aberta sempre que `index.html`
+é gravado):
+
+```bash
+python tools/preview.py          # http://127.0.0.1:8080
+```
+
+Expõe apenas `index.html` e `docs/`; o resto do repositório (`.git`, README, etc.) devolve 404.
+
 ### Publicar no GitHub Pages (ativo — sem build, sem custos)
 
 O repositório está pronto: `index.html` na raiz e `.nojekyll` a impedir o processamento Jekyll.
