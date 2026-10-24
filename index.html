@@ -400,6 +400,71 @@
 
       <div id="admin-google-view" class="hidden space-y-6">
         <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">✉️ Email de confirmação</h2>
+              <p class="text-xs text-slate-500 mt-1">Envia um email ao responsável quando a reserva é confirmada, com todos os dados, a localidade e a localização. O envio é feito pelo EmailJS a partir do endereço da campanha.</p>
+            </div>
+            <label class="shrink-0 flex items-center gap-2 text-xs font-bold text-slate-700">
+              <input id="email-enabled" type="checkbox" class="h-4 w-4 accent-indigo-600">
+              Ativo
+            </label>
+          </div>
+
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 space-y-1">
+            <p class="font-bold text-slate-700">1. Preparar no EmailJS (emailjs.com)</p>
+            <ol class="list-decimal list-inside space-y-0.5">
+              <li>Cria uma conta e liga o email da campanha (Gmail/Outlook) em <b>Email Services</b>.</li>
+              <li>Cria um <b>Email Template</b> com os campos: <code>to_email</code>, <code>to_name</code>, <code>from_name</code>, <code>reply_to</code>, <code>subject</code>, <code>message</code>.</li>
+              <li>Copia o <b>Service ID</b>, o <b>Template ID</b> e a <b>Public Key</b> (Account → General).</li>
+            </ol>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <label for="email-service" class="block text-[11px] font-bold text-slate-700">Service ID</label>
+              <input id="email-service" class="w-full p-2 border rounded-lg text-xs font-mono" placeholder="service_xxxxxxx">
+            </div>
+            <div class="space-y-2">
+              <label for="email-template" class="block text-[11px] font-bold text-slate-700">Template ID</label>
+              <input id="email-template" class="w-full p-2 border rounded-lg text-xs font-mono" placeholder="template_xxxxxxx">
+            </div>
+            <div class="space-y-2">
+              <label for="email-public-key" class="block text-[11px] font-bold text-slate-700">Public Key</label>
+              <input id="email-public-key" class="w-full p-2 border rounded-lg text-xs font-mono" placeholder="chave pública do EmailJS">
+            </div>
+            <div class="space-y-2">
+              <label for="email-subject" class="block text-[11px] font-bold text-slate-700">Assunto</label>
+              <input id="email-subject" class="w-full p-2 border rounded-lg text-xs" placeholder="Confirmação de reserva">
+            </div>
+            <div class="space-y-2">
+              <label for="email-from-name" class="block text-[11px] font-bold text-slate-700">Nome do remetente</label>
+              <input id="email-from-name" class="w-full p-2 border rounded-lg text-xs" placeholder="Campanha Educativa PT">
+            </div>
+            <div class="space-y-2">
+              <label for="email-from" class="block text-[11px] font-bold text-slate-700">Email da campanha (resposta)</label>
+              <input id="email-from" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="campanha@exemplo.pt">
+            </div>
+          </div>
+
+          <div class="p-3 bg-white border border-slate-200 rounded-xl">
+            <p class="text-[10px] font-bold uppercase text-slate-400 mb-1">Variáveis disponíveis no template</p>
+            <p class="text-[11px] text-slate-600 font-mono leading-relaxed break-words">to_email · to_name · from_name · reply_to · subject · message · locality · address · school · students · grade · date · start · end · duration · companion · companion_phone · phone · la_caixa · booking_ref</p>
+          </div>
+
+          <div class="flex flex-wrap items-end gap-2">
+            <div class="flex-1 min-w-[220px] space-y-2">
+              <label for="email-test-to" class="block text-[11px] font-bold text-slate-700">Enviar teste para</label>
+              <input id="email-test-to" type="email" class="w-full p-2 border rounded-lg text-xs" placeholder="o-teu-email@exemplo.pt">
+            </div>
+            <button id="btn-email-test" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-sm">✉️ Enviar teste</button>
+            <button id="btn-email-save" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold shadow-sm">Guardar</button>
+          </div>
+
+          <div id="email-status" class="text-xs font-semibold border rounded-xl px-3 py-2 bg-slate-50 border-slate-200 text-slate-600">Email desativado.</div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
           <div>
             <h2 class="text-lg font-bold text-slate-900">🪪 Identidade</h2>
             <p class="text-xs text-slate-500 mt-1">Ícone/logo, título, subtítulo e textos do cabeçalho. A imagem fica guardada neste navegador.</p>
@@ -720,6 +785,7 @@
           }
         },
         adminPinHash: '',
+        email: { enabled: false, serviceId: '', templateId: '', publicKey: '', fromName: '', fromEmail: '', subject: '' },
         branding: {
           logoEmoji: '🎓',
           logoImage: '',
@@ -790,6 +856,7 @@
           locations.push({
             id,
             name,
+            address: typeof raw.address === 'string' ? raw.address.trim() : '',
             startDate: parseISODate(raw.startDate) ? raw.startDate.trim() : '',
             endDate: parseISODate(raw.endDate) ? raw.endDate.trim() : ''
           });
@@ -831,6 +898,18 @@
           appData.bookings = migrateBookings(parsed.bookings, appData.locations);
           appData.dateSlots = normalizeDateSlots(parsed.dateSlots);
           appData.adminPinHash = typeof parsed.adminPinHash === 'string' ? parsed.adminPinHash : '';
+
+          const email = parsed.email && typeof parsed.email === 'object' ? parsed.email : {};
+          const emailText = (key) => (typeof email[key] === 'string' ? email[key] : '');
+          appData.email = {
+            enabled: email.enabled === true,
+            serviceId: emailText('serviceId'),
+            templateId: emailText('templateId'),
+            publicKey: emailText('publicKey'),
+            fromName: emailText('fromName'),
+            fromEmail: emailText('fromEmail'),
+            subject: emailText('subject')
+          };
 
           const branding = parsed.branding && typeof parsed.branding === 'object' ? parsed.branding : {};
           const brandingText = (key, fallback) => (typeof branding[key] === 'string' && branding[key].trim() ? branding[key] : fallback);
@@ -902,6 +981,7 @@
             appearance: appData.appearance,
             adminPinHash: appData.adminPinHash,
             branding: appData.branding,
+            email: appData.email,
             bookings: appData.bookings
           }));
         } catch (error) {
@@ -2036,8 +2116,20 @@
           dateRow.appendChild(toSpan);
           dateRow.appendChild(endInput);
 
+          const addressInput = document.createElement('input');
+          addressInput.type = 'text';
+          addressInput.value = location.address || '';
+          addressInput.placeholder = 'Localização / morada (vai no email)';
+          addressInput.className = 'w-full text-[10px] p-1 border rounded bg-white';
+          addressInput.setAttribute('aria-label', 'Localização da campanha');
+          addressInput.onchange = (event) => {
+            appData.locations[index].address = event.target.value.trim();
+            saveState();
+          };
+
           item.appendChild(topRow);
           item.appendChild(dateRow);
+          item.appendChild(addressInput);
           container.appendChild(item);
         });
       }
@@ -2522,6 +2614,7 @@
         renderCalendar();
         renderBookings();
         showToast(`Reserva registada · ${data.schoolName} · ${formatHumanDate(day.fullDate)} às ${slot.startStr}`, 'success');
+        sendBookingConfirmation(appData.bookings[key]);
       });
 
       function suggestStart(existing, duration, fallback) {
@@ -2582,7 +2675,7 @@
           return;
         }
 
-        appData.locations.push({ id: makeLocationId(), name, startDate: start, endDate: end });
+        appData.locations.push({ id: makeLocationId(), name, address: '', startDate: start, endDate: end });
         appData.selectedLocation = appData.locations.length - 1;
 
         nameInput.value = '';
@@ -3002,6 +3095,220 @@
         jumpToLocationStart(currentLocation());
         renderCalendar();
         showToast('Dados locais apagados.', 'success');
+      };
+
+      /* ---------- email de confirmacao ---------- */
+
+      const EMAILJS_SRC = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+      let emailJsLoader = null;
+
+      function loadEmailJs() {
+        if (window.emailjs && typeof window.emailjs.send === 'function') return Promise.resolve();
+        if (emailJsLoader) return emailJsLoader;
+        emailJsLoader = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = EMAILJS_SRC;
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Não foi possível carregar o EmailJS.'));
+          document.head.appendChild(script);
+        });
+        return emailJsLoader;
+      }
+
+      function emailConfigured() {
+        const config = appData.email || {};
+        return !!(config.serviceId && config.templateId && config.publicKey);
+      }
+
+      function buildEmailParams(booking, location, testTo) {
+        const config = appData.email || {};
+        const toEmail = testTo || booking.email;
+        const name = `${booking.firstName || ''} ${booking.lastName || ''}`.trim() || 'Responsável';
+        const laCaixa = booking.laCaixa === 'Sim' ? `Sim — ${booking.laCaixaDetails || ''}` : (booking.laCaixa || 'Não');
+
+        const message = [
+          `Olá ${name},`,
+          '',
+          'A sua reserva está confirmada.',
+          '',
+          `Localidade: ${booking.locationName || location.name || ''}`,
+          location.address ? `Localização: ${location.address}` : '',
+          `Escola: ${booking.schoolName || ''} (${booking.students || 0} alunos, ${booking.grade || ''})`,
+          `Data: ${formatHumanDate(booking.date)}`,
+          `Hora: ${booking.sessionStart || ''} – ${booking.sessionEnd || ''}`,
+          `Acompanhante: ${booking.companionName || ''} (${booking.companionPhone || ''})`,
+          `Fundação la Caixa: ${laCaixa}`,
+          '',
+          `Referência: ${booking.date} ${booking.sessionStart}`,
+          '',
+          `— ${config.fromName || 'Campanha Educativa PT'}`
+        ].filter((line) => line !== '').join('\n');
+
+        return {
+          to_email: toEmail,
+          to_name: name,
+          from_name: config.fromName || 'Campanha Educativa PT',
+          reply_to: config.fromEmail || '',
+          subject: config.subject || `Confirmação de reserva — ${booking.locationName || ''}`,
+          message,
+          locality: booking.locationName || location.name || '',
+          address: location.address || '',
+          school: booking.schoolName || '',
+          students: booking.students || '',
+          grade: booking.grade || '',
+          date: formatHumanDate(booking.date),
+          start: booking.sessionStart || '',
+          end: booking.sessionEnd || '',
+          duration: booking.duration || '',
+          companion: booking.companionName || '',
+          companion_phone: booking.companionPhone || '',
+          phone: booking.phone || '',
+          la_caixa: laCaixa,
+          booking_ref: `${booking.date} ${booking.sessionStart}`
+        };
+      }
+
+      async function sendEmail(params) {
+        const config = appData.email;
+        await loadEmailJs();
+        return window.emailjs.send(config.serviceId, config.templateId, params, { publicKey: config.publicKey });
+      }
+
+      async function sendBookingConfirmation(booking) {
+        const config = appData.email || {};
+        if (!config.enabled) return;
+        if (!emailConfigured()) {
+          setEmailStatus('Email ativo, mas faltam Service ID, Template ID ou Public Key.', 'warn');
+          return;
+        }
+
+        const location = appData.locations.find((item) => item.id === booking.locationId) || {};
+        try {
+          await sendEmail(buildEmailParams(booking, location));
+          setEmailStatus(`Email enviado para ${booking.email}.`, 'ok');
+          showToast(`Email de confirmação enviado para ${booking.email}.`, 'success');
+        } catch (error) {
+          const detail = (error && (error.text || error.message)) || 'erro desconhecido';
+          setEmailStatus(`Falha no envio: ${detail}`, 'error');
+          showToast('Reserva guardada, mas o email não foi enviado.', 'error');
+        }
+      }
+
+      function setEmailStatus(message, tone) {
+        const element = document.getElementById('email-status');
+        if (!element) return;
+        const tones = {
+          ok: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+          warn: 'bg-amber-50 border-amber-200 text-amber-800',
+          error: 'bg-rose-50 border-rose-200 text-rose-800',
+          info: 'bg-slate-50 border-slate-200 text-slate-600'
+        };
+        element.className = `text-xs font-semibold border rounded-xl px-3 py-2 ${tones[tone] || tones.info}`;
+        element.textContent = message;
+      }
+
+      function renderEmailControls() {
+        const config = appData.email || {};
+        const map = {
+          'email-service': 'serviceId',
+          'email-template': 'templateId',
+          'email-public-key': 'publicKey',
+          'email-from-name': 'fromName',
+          'email-from': 'fromEmail',
+          'email-subject': 'subject'
+        };
+
+        Object.keys(map).forEach((id) => {
+          const element = document.getElementById(id);
+          if (element) element.value = config[map[id]] || '';
+        });
+
+        const toggle = document.getElementById('email-enabled');
+        if (toggle) toggle.checked = config.enabled === true;
+
+        setEmailStatus(
+          config.enabled
+            ? (emailConfigured() ? 'Email ativo. Será enviado a cada reserva confirmada.' : 'Email ativo, mas faltam dados de configuração.')
+            : 'Email desativado.',
+          config.enabled ? 'ok' : 'info'
+        );
+      }
+
+      function emailConfigFromControls() {
+        const value = (id) => {
+          const element = document.getElementById(id);
+          return element ? element.value.trim() : '';
+        };
+
+        appData.email = {
+          enabled: !!document.getElementById('email-enabled').checked,
+          serviceId: value('email-service'),
+          templateId: value('email-template'),
+          publicKey: value('email-public-key'),
+          fromName: value('email-from-name'),
+          fromEmail: value('email-from'),
+          subject: value('email-subject')
+        };
+      }
+
+      document.getElementById('btn-email-save').onclick = () => {
+        emailConfigFromControls();
+        saveState();
+        renderEmailControls();
+        setEmailStatus(
+          appData.email.enabled
+            ? (emailConfigured() ? 'Configuração guardada. Email ativo.' : 'Guardado, mas faltam Service ID/Template ID/Public Key.')
+            : 'Configuração guardada. Email desativado.',
+          appData.email.enabled && emailConfigured() ? 'ok' : 'warn'
+        );
+        showToast('Configuração de email guardada.', 'success');
+      };
+
+      document.getElementById('btn-email-test').onclick = async () => {
+        emailConfigFromControls();
+        saveState();
+
+        const to = (document.getElementById('email-test-to').value || '').trim();
+        if (!to) {
+          setEmailStatus('Indica o email de destino do teste.', 'error');
+          return;
+        }
+        if (!emailConfigured()) {
+          setEmailStatus('Faltam Service ID, Template ID ou Public Key.', 'error');
+          return;
+        }
+
+        const location = currentLocation() || {};
+        const sample = {
+          email: to,
+          firstName: 'Teste',
+          lastName: 'de Envio',
+          schoolName: 'Escola de Teste',
+          students: 20,
+          grade: '4º ano',
+          locationName: location.name || 'Localidade',
+          locationId: location.id || '',
+          date: todayISO(),
+          sessionStart: '09:00',
+          sessionEnd: '10:15',
+          duration: 75,
+          companionName: 'Acompanhante de Teste',
+          companionPhone: '912345678',
+          phone: '913456789',
+          laCaixa: 'Não',
+          laCaixaDetails: ''
+        };
+
+        try {
+          setEmailStatus('A enviar teste…', 'info');
+          await sendEmail(buildEmailParams(sample, location, to));
+          setEmailStatus(`Teste enviado para ${to}.`, 'ok');
+          showToast('Email de teste enviado.', 'success');
+        } catch (error) {
+          const detail = (error && (error.text || error.message)) || 'erro desconhecido';
+          setEmailStatus(`Falha no teste: ${detail}`, 'error');
+        }
       };
 
       /* ---------- identidade ---------- */
@@ -4014,6 +4321,7 @@
       applyAppearance();
       renderBrandingControls();
       applyBranding();
+      renderEmailControls();
       initAdminWindows();
       jumpToLocationStart(currentLocation());
       renderCalendar();

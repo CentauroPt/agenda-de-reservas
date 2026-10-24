@@ -183,6 +183,27 @@ automaticamente na primeira abertura.
 - “Esqueci o PIN” permite recomeçar, mas **apaga os dados deste navegador** (reservas, campanhas,
   configurações).
 
+## Email de confirmação
+
+Na sub-página **Google Calendar** existe o bloco **✉️ Email de confirmação**. Quando está ativo, cada
+reserva enviada pelo formulário dispara um email para o endereço indicado pelo utilizador, com:
+
+- localidade (campanha) e **localização/morada** (novo campo em cada campanha do painel);
+- escola, nº de alunos e ano;
+- data, hora de início/fim e duração;
+- nome e telefone do responsável e do acompanhante;
+- programa da Fundação “la Caixa”.
+
+O envio usa o **EmailJS** (emailjs.com), que permite enviar a partir do email da campanha sem servidor.
+No painel configuram-se: **Service ID**, **Template ID**, **Public Key**, nome do remetente, email de
+resposta e assunto. O template do EmailJS deve usar as variáveis `to_email`, `to_name`, `from_name`,
+`reply_to`, `subject`, `message` (e pode usar também `locality`, `address`, `school`, `students`,
+`grade`, `date`, `start`, `end`, `duration`, `companion`, `companion_phone`, `phone`, `la_caixa`,
+`booking_ref`).
+
+Há um botão **Enviar teste** para validar a configuração. Nota: o EmailJS tem limites no plano gratuito
+(ex.: 200 emails/mês) e o remetente efetivo é o serviço de email ligado à conta.
+
 ## Identidade
 
 Na sub-página **Google Calendar** existe o bloco **🪪 Identidade**, que permite alterar:
